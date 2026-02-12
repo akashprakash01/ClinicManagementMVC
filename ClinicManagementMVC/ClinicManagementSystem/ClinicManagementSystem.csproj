@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Service\" />
+    <Folder Include="Repository\" />
+    <Folder Include="wwwroot\Images\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ClassLibraryDatabaseConnection">
+      <HintPath>..\..\..\..\camp4.1\New folder\New folder\ConsoleAppEmp2026\ClassLibraryDatabaseConnection\bin\Debug\net8.0\ClassLibraryDatabaseConnection.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
