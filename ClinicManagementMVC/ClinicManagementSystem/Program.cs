@@ -1,3 +1,6 @@
+using ClinicManagementSystem.Repository;
+using ClinicManagementSystem.Service;
+
 namespace ClinicManagementSystem
 {
     public class Program
@@ -6,16 +9,21 @@ namespace ClinicManagementSystem
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            var connectionString = builder.Configuration.GetConnectionString("ConnStringMVC");
+            builder.Services.AddSingleton(connectionString);
+
+            builder.Services.AddScoped<IUserRepository, UserServiceRepoImp>();
+            builder.Services.AddScoped<IUserServic, UserServiceImp>();
+
+            builder.Services.AddSession();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
@@ -23,6 +31,8 @@ namespace ClinicManagementSystem
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
 
             app.UseAuthorization();
 
