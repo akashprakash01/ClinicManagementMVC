@@ -12,7 +12,7 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark custom-bg">
-            <h1 class="ms-3">Receptionist Dashboard</h1>
+            <h1 class="ms-3">Pharmacist Dashboard</h1>
         </nav>
 
         <nav class="navbar navbar-expand-lg navbar navbar-dark bg-primary">
@@ -25,9 +25,9 @@
                 <div class="d-flex align-items-center w-100">
 
                     <div>
-                        <a class="btn btn-primary me-2" asp-controller="Receptionist" asp-action="CreatePatient">Add Patient</a>
-                        <a class="btn btn-primary me-2" asp-controller="Receptionist" asp-action="Index">View Patient</a>
-                        <a class="btn btn-primary me-2">View Appointment</a>
+                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="AddMedicineType">Add Medicine Type</a>
+                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="MedicineTypeList">Medicine Type List</a>
+                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="AddMedicine">Add Medicine</a>
                         <a class="btn btn-primary me-2">Generate Bill</a>
                         <a class="btn btn-primary me-2">View Bill</a>
                     </div>
@@ -40,7 +40,6 @@
                     </a>
 
                 </div>
-
             </div>
         </nav>
     </header>

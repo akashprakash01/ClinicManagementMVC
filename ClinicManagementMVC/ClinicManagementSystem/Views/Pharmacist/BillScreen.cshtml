@@ -1,0 +1,71 @@
+﻿@using ClinicManagementSystem.ViewModel
+@model AddBillItemViewModel
+
+<h2>Pharmacy Billing</h2>
+
+<h4>Grand Total: ₹ @Model.GrandTotal</h4>
+
+<form asp-action="AddBillItem" method="post">
+
+    <input type="hidden" asp-for="PharmacyBillId" />
+    <input type="hidden" name="prescriptionId" value="@ViewBag.PrescriptionId" />
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <label>Medicine</label>
+            <select asp-for="PrescriptionMedicineId" class="form-control">
+                <option value="">-- Select Medicine --</option>
+
+                @foreach (var item in Model.PrescriptionMedicines)
+                {
+                    <option value="@item.PrescriptionMedicineId">
+                        @item.MedicineName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label>Quantity</label>
+            <input asp-for="Quantity" class="form-control" />
+        </div>
+
+        <div class="col-md-3 mt-4">
+            <button type="submit" class="btn btn-success">Add Item</button>
+        </div>
+
+    </div>
+</form>
+
+<hr />
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Medicine</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Sub Total</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model.BillItems)
+        {
+            <tr>
+                <td>@item.MedicineName</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice</td>
+                <td>@item.SubTotal</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="PayBill"
+   asp-route-billId="@Model.PharmacyBillId"
+   asp-route-prescriptionId="@ViewBag.PrescriptionId"
+   class="btn btn-primary">
+    Pay Bill
+</a>

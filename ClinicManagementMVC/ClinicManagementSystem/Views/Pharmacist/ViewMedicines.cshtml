@@ -1,6 +1,8 @@
-﻿@model IEnumerable<ClinicManagementSystem.Models.Medicine>
+﻿@model List<Medicine>
 
-<h2>Medicine List</h2>
+<h2>Medicines</h2>
+
+<a asp-action="AddMedicine" class="btn btn-success mb-2">Add Medicine</a>
 
 <table class="table table-bordered">
     <thead>
@@ -17,7 +19,7 @@
         {
             <tr>
                 <td>@item.MedicineName</td>
-                <td>@item.MedicineType?.TypeName</td>
+                <td>@item.MedicineTypeName</td>
                 <td>@item.Price</td>
                 <td>@item.QuantityStock</td>
             </tr>
