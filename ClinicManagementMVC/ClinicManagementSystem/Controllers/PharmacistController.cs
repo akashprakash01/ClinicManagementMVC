@@ -1,83 +1,31 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicManagementSystem.Controllers
 {
     public class PharmacistController : Controller
     {
-        // GET: PharmacistController
-        public ActionResult Index()
+        public IActionResult Index()
         {
             return View();
         }
 
-        // GET: PharmacistController/Details/5
-        public ActionResult Details(int id)
+        public IActionResult AddMedicine()
         {
             return View();
         }
 
-        // GET: PharmacistController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: PharmacistController/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public IActionResult AddMedicine(string medicineName, string description, decimal price, int quantityStock)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+            
 
-        // GET: PharmacistController/Edit/5
-        public ActionResult Edit(int id)
-        {
             return View();
         }
 
-        // POST: PharmacistController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public IActionResult ViewMedicines()
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: PharmacistController/Delete/5
-        public ActionResult Delete(int id)
-        {
+            // Fetch medicines from database using your DAL
             return View();
-        }
-
-        // POST: PharmacistController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
         }
     }
 }
