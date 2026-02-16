@@ -1,8 +1,278 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<ClinicManagementSystem.Models.Patient>
 @{
+    Layout = "~/Views/Shared/ReceptionistNav.cshtml";
 }
-<h1>Receptionist Dashboard</h1>
+<!-- jQuery FIRST -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<h3>Employee Id: @ViewBag.EmployeeId</h3>
+<!-- Bootstrap (if not already) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<h2>Patients List</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Patient ID</th>
+            <th>Name</th>
+            <th>DOB</th>
+            <th>Gender</th>
+            <th>Contact</th>
+            <th>Address</th>
+            <th>Book Appointment</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var patient in Model)
+        {
+            <tr>
+                <td>@patient.PatientId</td>
+                <td>@patient.Name</td>
+                <td>@patient.DOB.ToShortDateString()</td>
+                <td>@patient.Gender</td>
+                <td>@patient.Contact</td>
+                <td>@patient.Address</td>
+                <td>
+                    <button class="btn btn-success btn-sm"
+                            onclick="openAppointmentModal(@patient.PatientId,0)">
+                        Today
+                    </button>
+
+                    <button class="btn btn-warning btn-sm"
+                            onclick="openAppointmentModal(@patient.PatientId,1)">
+                        Tomorrow
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+<!-- APPOINTMENT MODAL -->
+<div class="modal fade" id="appointmentModal">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>Book Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="patientId" />
+
+                <label>Select Doctor</label>
+                <select id="doctorSelect" class="form-control"></select>
+
+                <br />
+
+                <label>Select Slot</label>
+                <select id="slotSelect" class="form-control" size="10" disabled></select>
+
+            </div>
+
+            <div class="modal-footer">
+                <button id="bookBtn" class="btn btn-primary" onclick="bookAppointment()">
+                    Book
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+    let selectedDate;
+
+    //-----------------------------------------
+    // FORMAT DATE (LOCAL SAFE)
+    //-----------------------------------------
+    function formatDate(date)
+    {
+        return date.getFullYear() + "-" +
+            String(date.getMonth()+1).padStart(2,'0') + "-" +
+            String(date.getDate()).padStart(2,'0');
+    }
+
+
+    //-----------------------------------------
+    // OPEN MODAL
+    //-----------------------------------------
+    function openAppointmentModal(patientId, dayOffset)
+    {
+        $("#patientId").val(patientId);
+
+        selectedDate = new Date();
+        selectedDate.setDate(selectedDate.getDate() + dayOffset);
+
+        $("#doctorSelect")
+            .empty()
+            .append(`<option>Loading doctors...</option>`);
+
+        $("#slotSelect")
+            .empty()
+            .prop("disabled", true);
+
+        $("#bookBtn").prop("disabled", true);
+
+        $.get('/Receptionist/GetAvailableDoctors',
+            { dayOffset: dayOffset },
+            function(data)
+            {
+                $("#doctorSelect").empty();
+
+                if (!data || data.length === 0)
+                {
+                    $("#doctorSelect").append(`<option>No doctors available</option>`);
+                    return;
+                }
+
+                $("#doctorSelect").append(`<option value="">Select Doctor</option>`);
+
+                data.forEach(doc =>
+                {
+                    $("#doctorSelect").append(
+                        `<option value="${doc.doctorId}">
+                            ${doc.doctorName} (${doc.specializationName})
+                        </option>`
+                    );
+                });
+            })
+            .fail(() => alert("Error loading doctors."));
+
+        var modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+        modal.show();
+    }
+
+
+
+    //-----------------------------------------
+    // LOAD SLOTS
+    //-----------------------------------------
+    $(document).on("change", "#doctorSelect", function ()
+    {
+        let doctorId = parseInt($(this).val());
+
+        if (!doctorId)
+            return;
+
+        $("#slotSelect")
+            .empty()
+            .append(`<option>Loading slots...</option>`)
+            .prop("disabled", true);
+
+        $("#bookBtn").prop("disabled", true);
+
+        $.get('/Receptionist/GetSlots',
+        {
+            doctorId: doctorId,
+            selectedDate: formatDate(selectedDate)
+        },
+        function(data)
+        {
+            $("#slotSelect").empty();
+
+            if (data && data.length > 0)
+            {
+                $("#slotSelect").append(`<option value="">Select Slot</option>`);
+
+                data.forEach(slot =>
+                {
+                    $("#slotSelect").append(
+                        `<option value="${slot.value}">
+                            ${slot.text}
+                        </option>`
+                    );
+                });
+
+                $("#slotSelect").prop("disabled", false);
+            }
+            else
+            {
+                $("#slotSelect").append(`<option>No slots available</option>`);
+            }
+        })
+        .fail(() => alert("Error loading slots."));
+    });
+
+
+
+    //-----------------------------------------
+    // ENABLE BOOK BUTTON ONLY WHEN SLOT SELECTED
+    //-----------------------------------------
+    $(document).on("change", "#slotSelect", function ()
+    {
+        $("#bookBtn").prop("disabled", !$(this).val());
+    });
+
+
+
+    //-----------------------------------------
+    // BOOK APPOINTMENT
+    //-----------------------------------------
+    function bookAppointment()
+    {
+        let patientId = $("#patientId").val();
+        let doctorId = $("#doctorSelect").val();
+        let start = $("#slotSelect").val();
+
+        if(!doctorId || !start)
+        {
+            alert("Please select doctor and slot");
+            return;
+        }
+
+        $("#bookBtn")
+            .prop("disabled", true)
+            .text("Booking...");
+
+        let startDate = new Date(start);
+        let endDate = new Date(startDate.getTime() + 20 * 60000);
+
+        function formatLocal(date)
+        {
+            return date.getFullYear() + "-" +
+                String(date.getMonth()+1).padStart(2,'0') + "-" +
+                String(date.getDate()).padStart(2,'0') + " " +
+                String(date.getHours()).padStart(2,'0') + ":" +
+                String(date.getMinutes()).padStart(2,'0') + ":00";
+        }
+
+        $.post('/Receptionist/BookAppointment',
+        {
+            patientId: patientId,
+            doctorId: doctorId,
+            start: formatLocal(startDate),
+            end: formatLocal(endDate)
+        },
+        function(response)
+        {
+            alert(response.message);
+
+            if(response.success)
+                location.reload();
+            else
+            {
+                $("#bookBtn")
+                    .prop("disabled", false)
+                    .text("Book");
+            }
+        })
+        .fail(function()
+        {
+            alert("Booking failed.");
+
+            $("#bookBtn")
+                .prop("disabled", false)
+                .text("Book");
+        });
+    }
+
+</script>
