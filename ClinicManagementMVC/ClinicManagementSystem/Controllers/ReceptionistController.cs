@@ -20,7 +20,7 @@ namespace ClinicManagementSystem.Controllers
         }
 
         // GET: ReceptionistController
-        public IActionResult Index()
+        public IActionResult Index(string contact, string name)
         {
             // 🔐 Get EmployeeId from session
             int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
@@ -34,7 +34,13 @@ namespace ClinicManagementSystem.Controllers
             // Pass it to view
             ViewBag.EmployeeId = employeeId;
 
-            var patients = _receptionistService.GetAllPatients();
+            IEnumerable<Patient> patients;
+
+            // If search used
+            if (!string.IsNullOrEmpty(contact) || !string.IsNullOrEmpty(name))
+                patients = _receptionistService.SelectPatients(contact, name);
+            else
+                patients = _receptionistService.GetAllPatients();
 
             return View(patients);
         }

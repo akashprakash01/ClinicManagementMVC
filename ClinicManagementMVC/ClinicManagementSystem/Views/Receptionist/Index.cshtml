@@ -10,12 +10,48 @@
 
 <h2>Patients List</h2>
 
+<form method="get" asp-action="Index" class="mb-4">
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <input type="text"
+                   name="name"
+                   class="form-control"
+                   placeholder="Search by Name"
+                   value="@Context.Request.Query["name"]" />
+        </div>
+
+        <div class="col-md-4">
+            <input type="text"
+                   name="contact"
+                   class="form-control"
+                   placeholder="Search by Phone"
+                   value="@Context.Request.Query["contact"]" />
+        </div>
+
+        <div class="col-md-4">
+
+            <button class="btn btn-primary">
+                 Search
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Clear
+            </a>
+
+        </div>
+
+    </div>
+
+</form>
+
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
         <tr>
-            <th>Patient ID</th>
+            <th>Patient No</th>
             <th>Name</th>
-            <th>DOB</th>
+            <th>Date Of Birth</th>
             <th>Gender</th>
             <th>Contact</th>
             <th>Address</th>
