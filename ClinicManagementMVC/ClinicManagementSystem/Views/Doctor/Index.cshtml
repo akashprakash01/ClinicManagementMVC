@@ -1,8 +1,159 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@using ClinicManagementSystem.ViewModel
+@model List<DoctorAppointmentTodayVM>
 
-<h1>Doctor Dashboard</h1>
-<h3>Docrtor Id: @ViewBag.DoctorId</h3>
+@{
+    Layout = "~/Views/Shared/CommonLayout.cshtml";
+}
+<div class="container-fluid px-3 px-md-5 mt-4">
+
+    <div class="card shadow-lg mb-4">
+        <div class="card-body">
+            <h2 class="text-primary text-center text-md-start">
+                👨‍⚕️ Doctor Dashboard
+            </h2>
+            <hr />
+            <h5 class="text-center text-md-start">
+                Doctor ID: @ViewBag.DoctorId
+            </h5>
+        </div>
+    </div>
+
+    <h4 class="mb-3 text-center text-md-start">
+        Today's Appointments
+    </h4>
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Token</th>
+                        <th>Patient Name</th>
+                        <th>Contact</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Token</td>
+                            <td>@item.PatientName</td>
+                            <td>@item.Contact</td>
+                            <td>@item.AllocatedTimeDate.ToString("hh:mm tt")</td>
+                            <td>@item.AllocatedTimeUpTo.ToString("hh:mm tt")</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm w-100 w-md-auto checkBtn"
+                                        data-appointmentid="@item.AppointmentId"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#prescriptionModal">
+                                    Check Patient
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            No appointments scheduled for today.
+        </div>
+    }
+</div>
+
+
+
+<!-- Prescription Modal -->
+
+<div class="modal fade"
+     id="prescriptionModal"
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <form asp-controller="Doctor"
+                  asp-action="AddPrescription"
+                  method="post">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Add Prescription</h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="hidden" name="AppointmentId" id="appointmentIdHidden" />
+                    <input type="hidden" name="DoctorId" value="@ViewBag.DoctorId" />
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="form-label">Symptoms</label>
+                            <input type="text" name="Symptoms"
+                                   class="form-control" required />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Diagnosis</label>
+                            <input type="text" name="Diagnosis"
+                                   class="form-control" required />
+                        </div>
+
+                        <div class="col-md-6 col-12">
+                            <label class="form-label">Advice</label>
+                            <input type="text" name="Advice"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-md-6 col-12">
+                            <label class="form-label">Patient Notes</label>
+                            <input type="text" name="PatientNotes"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Follow Up Date</label>
+                            <input type="datetime-local"
+                                   name="FollowUpDate"
+                                   class="form-control" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit"
+                            class="btn btn-success w-100 w-md-auto">
+                        Save Prescription
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+@section Scripts {
+    <script>
+        document.querySelectorAll(".checkBtn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.getElementById("appointmentIdHidden").value =
+                    this.getAttribute("data-appointmentid");
+            });
+        });
+    </script>
+}

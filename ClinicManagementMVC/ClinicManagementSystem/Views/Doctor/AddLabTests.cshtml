@@ -1,0 +1,68 @@
+﻿@using ClinicManagementSystem.Models;
+@using ClinicManagementSystem.ViewModel
+@model List<LabTestVM>
+
+@{
+    Layout = "~/Views/Shared/CommonLayout.cshtml";
+}
+
+<div class="container-fluid px-3 px-md-5 mt-4">
+
+    <div class="card shadow-lg">
+        <div class="card-body">
+
+            <h3 class="text-primary text-center text-md-start">
+                🧪 Add Lab Tests
+            </h3>
+
+            <hr />
+
+            <!-- Lab Test Form -->
+            <form asp-action="AddPrescriptionLabTest" method="post">
+
+                <input type="hidden" name="PrescriptionId"
+                       value="@ViewBag.PrescriptionId" />
+
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-8">
+                        <label class="form-label">Select Lab Test</label>
+                        <select name="LabTestId"
+                                class="form-select"
+                                required>
+                            <option value="">-- Select Lab Test --</option>
+
+                            @foreach (var test in Model)
+                            {
+                                <option value="@test.LabTestId">
+                                    @test.LabTestName
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <button type="submit"
+                                class="btn btn-success w-100">
+                            Add Lab Test
+                        </button>
+                    </div>
+
+                </div>
+
+            </form>
+
+            <hr />
+
+            <!-- Finish Button -->
+            <div class="text-center mt-3">
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+                    Finish Consultation
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>

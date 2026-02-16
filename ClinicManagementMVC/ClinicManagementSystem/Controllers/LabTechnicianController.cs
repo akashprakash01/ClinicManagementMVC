@@ -1,83 +1,111 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ClinicManagementSystem.Models;
+using ClinicManagementSystem.Service;
+using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 
 namespace ClinicManagementSystem.Controllers
 {
     public class LabTechnicianController : Controller
     {
-        // GET: LabTechnicianController
-        public ActionResult Index()
+        private readonly ILabTechnicianService _service;
+
+        public LabTechnicianController(ILabTechnicianService service)
+        {
+            _service = service;
+        }
+
+        public IActionResult Index()
+        {
+            var pending = _service.GetPendingLabTests();
+            var completed = _service.GetCompletedLabTests();
+
+            ViewBag.CompletedTests = completed;
+
+            return View(pending);
+        }
+
+        // GET
+        public IActionResult AddLabTest()
         {
             return View();
         }
 
-        // GET: LabTechnicianController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: LabTechnicianController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: LabTechnicianController/Create
+        // POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public IActionResult AddLabTest(LabTestVM model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            string message;
+            int id = _service.AddLabTest(model, out message);
+
+            TempData["Message"] = message;
+
+            return RedirectToAction("AddLabTest");
+        }
+
+        public IActionResult AddResult(int id)
+        {
+            // id = PrescriptionLabTestId
+
+            var model = _service.GetLabTestDetailsForResult(id);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddResult(LabTestResultVM model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            _service.AddLabTestResult(model);
+
+            return RedirectToAction("Index");
+        }
+        public IActionResult EditResult(int id)
+        {
+            var model = _service.GetLabTestResultById(id);
+            return View(model);
+        }
+        [HttpPost]
+        public IActionResult EditResult(LabTestResultVM model)
+        {
+            _service.UpdateLabTestResult(model);
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult ViewBill(int id)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                var model = _service.GetPrescriptionLabBill(id);
+
+                // If no tests returned, show message
+                if (model == null || model.Tests == null || model.Tests.Count == 0)
+                {
+                    TempData["Error"] = "All lab tests are not completed yet.";
+                    return RedirectToAction("Index");
+                }
+
+                return View(model);
             }
-            catch
+            catch (SqlException ex)
             {
-                return View();
+                // Friendly message instead of crash
+                if (ex.Message.Contains("All lab tests are not completed"))
+                {
+                    TempData["Error"] = "All lab tests must be completed before generating the bill.";
+                    return RedirectToAction("Index");
+                }
+
+                throw;
             }
         }
 
-        // GET: LabTechnicianController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: LabTechnicianController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: LabTechnicianController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: LabTechnicianController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
     }
 }

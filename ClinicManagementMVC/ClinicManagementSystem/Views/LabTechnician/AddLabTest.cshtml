@@ -1,0 +1,52 @@
+﻿@model ClinicManagementSystem.Models.LabTestVM;
+@{
+    Layout = "~/Views/Shared/CommonLayout.cshtml";
+}
+
+<div class="container mt-4">
+
+
+    <div class="card shadow-lg">
+        <div class="card-body">
+
+            <h3 class="text-primary">🧪 Add New Lab Test</h3>
+            <hr />
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-info">
+                    @TempData["Message"]
+                </div>
+            }
+
+            <form asp-action="AddLabTest" method="post">
+
+                <div class="mb-3">
+                    <label class="form-label">Lab Test Name</label>
+                    <input asp-for="LabTestName" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <input asp-for="Description" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Lab Test Price</label>
+                    <input asp-for="LabTestPrice"
+                           class="form-control"
+                           type="number"
+                           step="0.01"
+                           min="0"
+                           required />
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">
+                    Save Lab Test
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
