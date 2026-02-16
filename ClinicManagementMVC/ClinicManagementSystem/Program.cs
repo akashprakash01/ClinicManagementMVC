@@ -22,6 +22,9 @@ namespace ClinicManagementSystem
             builder.Services.AddScoped<ILabTechnicianService, LabTechnicianServiceImpl>();
             builder.Services.AddScoped<IReceptionistRepository, ReceptionistRepository>();
             builder.Services.AddScoped<IReceptionistService, ReceptionistService>();
+            builder.Services.AddScoped<IPharmacistService, PharmacistService>();
+            builder.Services.AddScoped<IPharmacistRepository, PharmacistRepository>();
+
 
 
             builder.Services.AddSession();

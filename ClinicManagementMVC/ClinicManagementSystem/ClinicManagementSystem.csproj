@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <Reference Include="ClassLibraryDatabaseConnection">
-      <HintPath>..\..\..\..\ConsoleAppCmsv2025-master\ClassLibraryDatabaseConnection\bin\Debug\net8.0\ClassLibraryDatabaseConnection.dll</HintPath>
+      <HintPath>..\..\..\..\.net\New folder\ProjectsSolution\ClassLibraryDatabaseConnection\bin\Debug\net8.0\ClassLibraryDatabaseConnection.dll</HintPath>
     </Reference>
   </ItemGroup>
 

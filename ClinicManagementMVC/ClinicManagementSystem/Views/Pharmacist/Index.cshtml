@@ -1,33 +1,27 @@
-﻿@{
-    ViewBag.Title = "Pharmacist Dashboard";
+﻿<h2>Pharmacist Dashboard</h2>
+@{
+    Layout = "~/Views/Shared/PharmacistNav.cshtml";
 }
+<div class="list-group">
 
-<h2>Pharmacist Dashboard</h2>
+    <a asp-action="AddMedicineType" class="list-group-item list-group-item-action">
+        Add Medicine Type
+    </a>
 
-<div class="row mt-4">
+    <a asp-action="MedicineTypeList" class="list-group-item list-group-item-action">
+        View Medicine Types
+    </a>
 
-    <div class="col-md-4">
-        <a href="/Pharmacist/AddMedicine" class="btn btn-primary w-100 mb-3">
-            Add Medicine
-        </a>
-    </div>
+    <a asp-action="AddMedicine" class="list-group-item list-group-item-action">
+        Add Medicine
+    </a>
 
-    <div class="col-md-4">
-        <a href="/Pharmacist/ViewMedicines" class="btn btn-success w-100 mb-3">
-            View Medicines
-        </a>
-    </div>
+    <a asp-action="ViewMedicines" class="list-group-item list-group-item-action">
+        View Medicines
+    </a>
 
-    <div class="col-md-4">
-        <a href="/Pharmacist/CreateBill" class="btn btn-warning w-100 mb-3">
-            Create Pharmacy Bill
-        </a>
-    </div>
-
-    <div class="col-md-4">
-        <a href="/Pharmacist/ViewBills" class="btn btn-info w-100 mb-3">
-            View Bills
-        </a>
-    </div>
+    <a asp-action="CreateBill" class="list-group-item list-group-item-action">
+        Create Pharmacy Bill
+    </a>
 
 </div>
