@@ -20,6 +20,10 @@ namespace ClinicManagementSystem
             builder.Services.AddScoped<IDoctorService, DoctorServiceImpl>();
             builder.Services.AddScoped<ILabTechnicianRepository, LabTechnicianRepositoryImpl>();
             builder.Services.AddScoped<ILabTechnicianService, LabTechnicianServiceImpl>();
+            builder.Services.AddScoped<IReceptionistRepository, ReceptionistRepository>();
+            builder.Services.AddScoped<IReceptionistService, ReceptionistService>();
+
+
             builder.Services.AddSession();
 
             var app = builder.Build();
@@ -41,7 +45,7 @@ namespace ClinicManagementSystem
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Login}/{action=Index}/{id?}");
 
             app.Run();
         }
