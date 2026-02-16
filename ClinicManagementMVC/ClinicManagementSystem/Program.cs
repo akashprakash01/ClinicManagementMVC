@@ -16,7 +16,10 @@ namespace ClinicManagementSystem
 
             builder.Services.AddScoped<IUserRepository, UserServiceRepoImp>();
             builder.Services.AddScoped<IUserServic, UserServiceImp>();
-
+            builder.Services.AddScoped<IDoctorRepository, DoctorRepositoryImpl>();
+            builder.Services.AddScoped<IDoctorService, DoctorServiceImpl>();
+            builder.Services.AddScoped<ILabTechnicianRepository, LabTechnicianRepositoryImpl>();
+            builder.Services.AddScoped<ILabTechnicianService, LabTechnicianServiceImpl>();
             builder.Services.AddSession();
 
             var app = builder.Build();
