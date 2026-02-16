@@ -1,0 +1,46 @@
+﻿@model ClinicManagementSystem.Models.PrescriptionLabBillVM
+
+@{
+    Layout = "~/Views/Shared/CommonLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="card shadow p-4">
+
+        <h2 class="text-primary text-center">Lab Report & Bill</h2>
+        <hr />
+
+        <p><strong>Patient:</strong> @Model.PatientName</p>
+
+        <table class="table table-bordered mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Test Name</th>
+                    <th>Result</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var test in Model.Tests)
+                {
+                    <tr>
+                        <td>@test.LabTestName</td>
+                        <td>@test.Result</td>
+                        <td>₹ @test.Amount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="text-end mt-3">
+            <h4>Total: ₹ @Model.GrandTotal</h4>
+        </div>
+
+        <div class="text-center mt-4">
+            <button onclick="window.print()" class="btn btn-dark">
+                Print Bill
+            </button>
+        </div>
+
+    </div>
+</div>

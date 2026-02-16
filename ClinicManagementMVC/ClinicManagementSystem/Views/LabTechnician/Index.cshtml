@@ -1,6 +1,140 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using ClinicManagementSystem.ViewModel
+@model List<LabTechnicianDashboardVM>
+
 @{
+    Layout = "~/Views/Shared/CommonLayout.cshtml";
 }
-<h1>lab technician dashboard</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning text-center">
+        @TempData["Error"]
+    </div>
+}
+<div class="container-fluid mt-4">
+
+    <h2 class="text-center text-primary mb-4">
+        🧪 Lab Technician Dashboard
+    </h2>
+
+    <!-- ===================== PENDING LAB TESTS ===================== -->
+
+    <div class="card shadow-lg mb-5">
+        <div class="card-body">
+
+            <h4 class="text-primary">Pending Lab Tests</h4>
+            <hr />
+
+            @if (Model != null && Model.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Patient</th>
+                                <th>Lab Test</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.PatientName</td>
+                                    <td>@item.LabTestName</td>
+                                    <td>₹ @item.LabTestPrice</td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">
+                                            Pending
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="AddResult"
+                                           asp-route-id="@item.PrescriptionLabTestId"
+                                           class="btn btn-primary btn-sm">
+                                            Add Result
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    No pending lab tests.
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <!-- ===================== COMPLETED LAB TESTS ===================== -->
+
+    <div class="card shadow-lg">
+        <div class="card-body">
+
+            <h4 class="text-success">Completed Lab Tests</h4>
+            <hr />
+
+            @{
+                var completedList = ViewBag.CompletedTests as List<LabTestResultDisplayVM>;
+            }
+
+            @if (completedList != null && completedList.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Patient</th>
+                                <th>Lab Test</th>
+                                <th>Amount</th>
+                                <th>Result</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in completedList)
+                            {
+                                <tr>
+                                    <td>@item.PatientName</td>
+                                    <td>@item.LabTestName</td>
+                                    <td>₹ @item.TotalAmount</td>
+                                    <td>@item.Result</td>
+                                    <td>
+                                        <a asp-action="ViewBill"
+                                           asp-route-id="@item.PrescriptionId"
+                                           class="btn btn-info btn-sm me-1">
+                                            View Bill
+                                        </a>
+
+                                        <a asp-action="EditResult"
+                                           asp-route-id="@item.LabTestResultId"
+                                           class="btn btn-warning btn-sm">
+                                            Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary text-center">
+                    No completed lab tests.
+                </div>
+            }
+
+        </div>
+    </div>
+
+</div>
