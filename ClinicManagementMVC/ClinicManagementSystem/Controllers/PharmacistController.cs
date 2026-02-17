@@ -15,35 +15,34 @@ namespace ClinicManagementSystem.Controllers
             _service = service;
         }
 
+        // ================= DASHBOARD =================
+
         public IActionResult Index()
         {
+            LoadMedicineTypeDropdown();
             return View();
         }
 
         // ================= MEDICINE TYPE =================
-
-        public IActionResult AddMedicineType()
-        {
-            return View();
-        }
 
         [HttpPost]
         public IActionResult AddMedicineType(MedicineType model)
         {
             try
             {
-                model.CreatedBy = 1; // get from session later
+                model.CreatedBy = HttpContext.Session.GetInt32("EmployeeId").Value;
+
 
                 _service.AddMedicineType(model);
 
                 TempData["Success"] = "Medicine Type Added Successfully";
-                return RedirectToAction("MedicineTypeList");
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                return View(model);
             }
+
+            return RedirectToAction("Index");
         }
 
         public IActionResult MedicineTypeList()
@@ -54,30 +53,23 @@ namespace ClinicManagementSystem.Controllers
 
         // ================= ADD MEDICINE =================
 
-        public IActionResult AddMedicine()
-        {
-            LoadMedicineTypeDropdown();
-            return View();
-        }
-
         [HttpPost]
         public IActionResult AddMedicine(Medicine model)
         {
             try
             {
-                model.CreatedBy = 1;
+                model.CreatedBy = HttpContext.Session.GetInt32("EmployeeId").Value;
 
                 _service.AddMedicine(model);
 
                 TempData["Success"] = "Medicine Added Successfully";
-                return RedirectToAction("ViewMedicines");
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                LoadMedicineTypeDropdown();
-                return View(model);
             }
+
+            return RedirectToAction("Index");
         }
 
         // ================= VIEW MEDICINES =================
@@ -89,11 +81,6 @@ namespace ClinicManagementSystem.Controllers
         }
 
         // ================= CREATE BILL =================
-
-        public IActionResult CreatePharmacyBill()
-        {
-            return View();
-        }
 
         [HttpPost]
         public IActionResult CreatePharmacyBill(CreatePharmacyBill model)
@@ -111,7 +98,7 @@ namespace ClinicManagementSystem.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                return View(model);
+                return RedirectToAction("Index");
             }
         }
 
@@ -164,34 +151,27 @@ namespace ClinicManagementSystem.Controllers
                 _service.PayBill(billId);
 
                 TempData["Success"] = "Payment completed successfully";
-
-                return RedirectToAction("BillScreen", new
-                {
-                    prescriptionId = prescriptionId,
-                    billId = billId
-                });
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-
-                return RedirectToAction("BillScreen", new
-                {
-                    prescriptionId = prescriptionId,
-                    billId = billId
-                });
             }
+
+            return RedirectToAction("BillScreen", new
+            {
+                prescriptionId = prescriptionId,
+                billId = billId
+            });
         }
 
-        // ================= DROPDOWN HELPER =================
+        // ================= DROPDOWN =================
 
         private void LoadMedicineTypeDropdown()
         {
             ViewBag.MedicineTypes = new SelectList(
                 _service.GetMedicineTypes(),
                 "MedicineTypeId",
-                "TypeName"
-            );
+                "TypeName");
         }
     }
 }

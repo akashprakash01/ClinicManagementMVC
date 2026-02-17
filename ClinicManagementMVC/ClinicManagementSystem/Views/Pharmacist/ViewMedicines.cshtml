@@ -1,5 +1,10 @@
 ﻿@model List<Medicine>
 
+@{
+    ViewData["Title"] = "Pharmacist Dashboard";
+    Layout = "~/Views/Shared/PharmacistNav.cshtml";
+}
+
 <h2>Medicines</h2>
 
 <a asp-action="AddMedicine" class="btn btn-success mb-2">Add Medicine</a>
