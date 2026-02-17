@@ -150,11 +150,37 @@ namespace ClinicManagementSystem.Repository
         }
         #endregion
 
-
+        #region Get Patient By ID
         public Patient GetPatientById(int patientId)
         {
-            throw new NotImplementedException();
+            Patient patient = null;
+
+            using (SqlConnection conn = ConnectionManager.OpenConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand("sp_GetPatientById", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@patientId", patientId);
+
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    patient = new Patient
+                    {
+                        PatientId = Convert.ToInt32(dr["patientId"]),
+                        Name = dr["name"].ToString(),
+                        DOB = Convert.ToDateTime(dr["dob"]),
+                        Gender = dr["gender"].ToString(),
+                        Contact = dr["contact"].ToString(),
+                        Address = dr["address"].ToString()
+                    };
+                }
+            }
+
+            return patient;
         }
+        #endregion
+
 
         #region Get Available Doctors
         public List<AvailableDoctor> GetAvailableDoctors(int dayOffset)
@@ -284,85 +310,71 @@ namespace ClinicManagementSystem.Repository
             throw new NotImplementedException();
         }
 
+        #region Appointment by ID
         public Appointment GetAppointmentById(int appointmentId)
         {
-            throw new NotImplementedException();
-        }
+            Appointment appointment = null;
 
-        
-
-        public DashboardViewModel GetDashboardData()
-        {
-            DashboardViewModel dashboard = new DashboardViewModel();
-            dashboard.UpcomingAppointments = new List<UpcomingAppointment>();
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlConnection conn = ConnectionManager.OpenConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand("sp_GetAppointmentById", conn))
             {
-                conn.Open();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@appointmentId", appointmentId);
 
-                // Total appointments today
-                string queryAppointments = @"SELECT COUNT(*) FROM Appointment 
-                                           WHERE CAST(allocatedTimeDate AS DATE) = CAST(GETDATE() AS DATE)";
-                using (SqlCommand cmd = new SqlCommand(queryAppointments, conn))
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                if (dr.Read())
                 {
-                    dashboard.TotalAppointmentsToday = (int)cmd.ExecuteScalar();
-                }
-
-                // Total patients registered today
-                string queryPatients = @"SELECT COUNT(*) FROM Patients 
-                                       WHERE CAST(createdAt AS DATE) = CAST(GETDATE() AS DATE)";
-                using (SqlCommand cmd = new SqlCommand(queryPatients, conn))
-                {
-                    dashboard.TotalPatientsToday = (int)cmd.ExecuteScalar();
-                }
-
-                // Available doctors today
-                string queryDoctors = @"SELECT COUNT(*) FROM DoctorsWorkingHours dwh
-                                      INNER JOIN WeekDays w ON dwh.dayId = w.dayId
-                                      WHERE w.dayNames = DATENAME(WEEKDAY, GETDATE())
-                                      AND dwh.isAvailable = 1";
-                using (SqlCommand cmd = new SqlCommand(queryDoctors, conn))
-                {
-                    dashboard.TotalDoctorsAvailable = (int)cmd.ExecuteScalar();
-                }
-
-                // Upcoming appointments (next 3)
-                string queryUpcoming = @"SELECT TOP 3 a.appointmentId, a.token, a.allocatedTimeDate,
-                                        p.name AS patientName, CONCAT(e.firstName, ' ', e.lastName) AS doctorName
-                                        FROM Appointment a
-                                        INNER JOIN Patients p ON a.patientId = p.patientId
-                                        INNER JOIN Doctors d ON a.doctorId = d.doctorId
-                                        INNER JOIN EmployeeProfile e ON d.employeeId = e.employeeId
-                                        WHERE CAST(a.allocatedTimeDate AS DATE) = CAST(GETDATE() AS DATE)
-                                        AND a.allocatedTimeDate >= GETDATE()
-                                        ORDER BY a.allocatedTimeDate";
-
-                using (SqlCommand cmd = new SqlCommand(queryUpcoming, conn))
-                {
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    appointment = new Appointment
                     {
-                        while (reader.Read())
-                        {
-                            dashboard.UpcomingAppointments.Add(new UpcomingAppointment
-                            {
-                                AppointmentId = Convert.ToInt32(reader["appointmentId"]),
-                                PatientName = reader["patientName"].ToString(),
-                                DoctorName = reader["doctorName"].ToString(),
-                                Time = Convert.ToDateTime(reader["allocatedTimeDate"]),
-                                Token = reader["token"].ToString()
-                            });
-                        }
-                    }
+                        AppointmentId = Convert.ToInt32(dr["appointmentId"]),
+                        DoctorId = Convert.ToInt32(dr["doctorId"]),
+                        PatientId = Convert.ToInt32(dr["patientId"]),
+                        AllocatedTimeDate = Convert.ToDateTime(dr["allocatedTimeDate"]),
+                        AllocatedTimeUpTo = Convert.ToDateTime(dr["allocatedTimeUpTo"]),
+                        Token = dr["token"]?.ToString(),
+                        PatientCheckup = Convert.ToBoolean(dr["patientCheckup"])
+                    };
                 }
             }
 
-            return dashboard;
+            return appointment;
         }
 
+        #endregion
+
+        #region Appointment by date
         public List<Appointment> GetDoctorAppointmentsToday(int doctorId)
         {
-            throw new NotImplementedException();
-        }
+            List<Appointment> list = new List<Appointment>();
 
+            using (SqlConnection conn = ConnectionManager.OpenConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand("sp_GetDoctorAppointmentsToday", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@doctorId", doctorId);
+
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    list.Add(new Appointment
+                    {
+                        AppointmentId = Convert.ToInt32(dr["appointmentId"]),
+                        PatientId = Convert.ToInt32(dr["patientId"]),
+                        AllocatedTimeDate = Convert.ToDateTime(dr["allocatedTimeDate"]),
+                        AllocatedTimeUpTo = Convert.ToDateTime(dr["allocatedTimeUpTo"]),
+                        Token = dr["token"]?.ToString(),
+                        PatientCheckup = Convert.ToBoolean(dr["patientCheckup"])
+                    });
+                }
+            }
+
+            return list;
+        }
+        #endregion
+
+        #region doctor slots
         public List<DoctorSlot> GetDoctorSlots(int doctorId, DateTime selectedDate)
         {
             var slots = new List<DoctorSlot>();
@@ -394,9 +406,9 @@ namespace ClinicManagementSystem.Repository
 
             return slots;
         }
+        #endregion
 
-
-
+        #region slot status
         public DoctorSlotStatus GetDoctorSlotStatus(int doctorId)
         {
             DoctorSlotStatus status = new DoctorSlotStatus();
@@ -439,7 +451,9 @@ namespace ClinicManagementSystem.Repository
 
             return status;
         }
+        #endregion
 
+        #region Doctor Working hours
         public List<DoctorWorkingHours> GetDoctorWorkingHours(int doctorId, int dayId)
         {
             var workingHours = new List<DoctorWorkingHours>();
@@ -468,7 +482,9 @@ namespace ClinicManagementSystem.Repository
 
             return workingHours;
         }
+        #endregion
 
+        #region booked slots
         public List<BookedSlot> GetBookedSlots(int doctorId, DateTime selectedDate)
         {
             var bookedSlots = new List<BookedSlot>();
@@ -503,5 +519,95 @@ namespace ClinicManagementSystem.Repository
             return bookedSlots;
         }
 
+        #endregion
+
+        #region view appointments
+        public List<AppointmentViewModel> ViewAppointments(
+            int? patientId,
+            int? doctorId,
+            DateTime? appointmentDate,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            List<AppointmentViewModel> list = new();
+
+            using (SqlConnection conn = ConnectionManager.OpenConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand("sp_ViewAppointments", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@patientId", (object?)patientId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@doctorId", (object?)doctorId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@appointmentDate", (object?)appointmentDate ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@fromDate", (object?)fromDate ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@toDate", (object?)toDate ?? DBNull.Value);
+
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    list.Add(new AppointmentViewModel
+                    {
+                        AppointmentId = Convert.ToInt32(dr["appointmentId"]),
+                        BookedAt = Convert.ToDateTime(dr["bookedAt"]),
+                        DoctorId = Convert.ToInt32(dr["doctorId"]),
+                        DoctorName = dr["doctorName"].ToString(),
+                        SpecializationName = dr["specializationName"].ToString(),
+                        PatientId = Convert.ToInt32(dr["patientId"]),
+                        PatientName = dr["patientName"].ToString(),
+                        Token = dr["token"]?.ToString(),
+                        AppointmentDate = Convert.ToDateTime(dr["appointmentDate"]),
+                        AppointmentEndTime = Convert.ToDateTime(dr["appointmentEndTime"]),
+                        AppointmentStatus = dr["appointmentStatus"].ToString(),
+                        IsBillGenerated = Convert.ToBoolean(dr["IsBillGenerated"]),
+
+                        PatientBillId = dr["patientBillId"] == DBNull.Value? null
+                                        : Convert.ToInt32(dr["patientBillId"]),
+
+                    });
+                }
+            }
+
+            return list;
+        }
+        #endregion
+
+        #region Get bill by ID
+
+        public PatientBillViewModel GetBillById(int billId)
+        {
+            PatientBillViewModel model = null;
+
+            using (SqlConnection conn = ConnectionManager.OpenConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand("sp_GetBillById", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@billId", billId);
+
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    model = new PatientBillViewModel
+                    {
+                        PatientBillId = Convert.ToInt32(dr["patientBillId"]),
+                        AppointmentId = Convert.ToInt32(dr["appointmentId"]),
+                        BillAmount = Convert.ToDecimal(dr["billAmount"]),
+                        BillStatus = dr["billStatus"].ToString(),
+
+                        PatientName = dr["patientName"].ToString(),
+                        DoctorName = dr["doctorName"].ToString(),
+                        AppointmentDate = Convert.ToDateTime(dr["appointmentDate"]),
+                        Token = dr["token"].ToString()
+                    };
+
+                }
+            }
+
+            return model;
+        }
+
+
+        #endregion
     }
 }

@@ -1,0 +1,33 @@
+﻿@model List<Medicine>
+
+@{
+    ViewData["Title"] = "Pharmacist Dashboard";
+    Layout = "~/Views/Shared/PharmacistNav.cshtml";
+}
+
+<h2>Medicines</h2>
+
+<a asp-action="AddMedicine" class="btn btn-success mb-2">Add Medicine</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Stock</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.MedicineName</td>
+                <td>@item.MedicineTypeName</td>
+                <td>@item.Price</td>
+                <td>@item.QuantityStock</td>
+            </tr>
+        }
+    </tbody>
+</table>
