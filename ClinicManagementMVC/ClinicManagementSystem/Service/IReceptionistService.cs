@@ -21,6 +21,15 @@ namespace ClinicManagementSystem.Service
         public List<Appointment> GetDoctorAppointmentsToday(int doctorId);
         public PatientBillViewModel CreatePatientBill(int appointmentId);
         public Appointment GetAppointmentById(int appointmentId);
-        public  DashboardViewModel GetDashboardData(); 
+
+        public List<AppointmentViewModel> ViewAppointments(
+            int? patientId,
+            int? doctorId,
+            DateTime? appointmentDate,
+            DateTime? fromDate,
+            DateTime? toDate);
+
+        PatientBillViewModel GetBillById(int billId);
+
     }
 }
