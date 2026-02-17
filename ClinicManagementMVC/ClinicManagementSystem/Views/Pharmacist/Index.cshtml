@@ -1,27 +1,131 @@
-﻿<h2>Pharmacist Dashboard</h2>
-@{
+﻿@{
+    ViewData["Title"] = "Pharmacist Dashboard";
     Layout = "~/Views/Shared/PharmacistNav.cshtml";
 }
-<div class="list-group">
 
-    <a asp-action="AddMedicineType" class="list-group-item list-group-item-action">
-        Add Medicine Type
-    </a>
 
-    <a asp-action="MedicineTypeList" class="list-group-item list-group-item-action">
-        View Medicine Types
-    </a>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
 
-    <a asp-action="AddMedicine" class="list-group-item list-group-item-action">
-        Add Medicine
-    </a>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
 
-    <a asp-action="ViewMedicines" class="list-group-item list-group-item-action">
-        View Medicines
-    </a>
 
-    <a asp-action="CreateBill" class="list-group-item list-group-item-action">
-        Create Pharmacy Bill
-    </a>
 
+<!-- ================= ADD MEDICINE TYPE MODAL ================= -->
+
+<div class="modal fade" id="medicineTypeModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form asp-action="AddMedicineType" method="post">
+
+                <div class="modal-header">
+                    <h5>Add Medicine Type</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <label>Type Name</label>
+                    <input name="TypeName" class="form-control" />
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary">Save</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= ADD MEDICINE MODAL ================= -->
+
+<div class="modal fade" id="medicineModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <form asp-action="AddMedicine" method="post">
+
+                <div class="modal-header">
+                    <h5>Add Medicine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-2">
+                        <label>Name</label>
+                        <input name="MedicineName" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Description</label>
+                        <input name="Description" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Type</label>
+                        <select name="MedicineTypeId"
+                                class="form-control"
+                                asp-items="ViewBag.MedicineTypes">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Price</label>
+                        <input name="Price" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Stock</label>
+                        <input name="QuantityStock" class="form-control" />
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success">Save</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= CREATE BILL MODAL ================= -->
+
+<div class="modal fade" id="billModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form asp-action="CreateBill" method="post">
+
+                <div class="modal-header">
+                    <h5>Create Bill</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <label>Prescription Id</label>
+                    <input name="PrescriptionId" class="form-control" />
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary">Create</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
 </div>

@@ -25,10 +25,23 @@
                 <div class="d-flex align-items-center w-100">
 
                     <div>
-                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="AddMedicineType">Add Medicine Type</a>
+                        <button class="btn btn-primary me-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#medicineTypeModal">
+                            Add Medicine Type
+                        </button>
                         <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="MedicineTypeList">Medicine Type List</a>
-                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="AddMedicine">Add Medicine</a>
-                        <a class="btn btn-primary me-2">Generate Bill</a>
+                        <button class="btn btn-primary me-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#medicineModal">
+                            Add Medicine 
+                        </button>
+                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="ViewMedicines">Medicine Type List</a>
+                        <button class="btn btn-primary me-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#billModal">
+                            Add Bill
+                        </button>
                         <a class="btn btn-primary me-2">View Bill</a>
                     </div>
 

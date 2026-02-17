@@ -1,6 +1,10 @@
 ﻿@using ClinicManagementSystem.ViewModel
 @model AddBillItemViewModel
 
+@{
+    ViewData["Title"] = "Pharmacist Dashboard";
+    Layout = "~/Views/Shared/PharmacistNav.cshtml";
+}
 <h2>Pharmacy Billing</h2>
 
 <h4>Grand Total: ₹ @Model.GrandTotal</h4>

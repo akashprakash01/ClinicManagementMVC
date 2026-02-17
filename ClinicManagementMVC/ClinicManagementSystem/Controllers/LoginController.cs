@@ -44,6 +44,7 @@ namespace ClinicManagementSystem.Controllers
             HttpContext.Session.SetInt32("EmployeeId", availableUser.EmployeeId ?? 0);
             HttpContext.Session.SetInt32("RoleId", availableUser.RoleId ?? 0);
 
+
             if (availableUser.DoctorId.HasValue)
                 HttpContext.Session.SetInt32("DoctorId", availableUser.DoctorId.Value);
 
