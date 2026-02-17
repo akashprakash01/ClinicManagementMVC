@@ -1,5 +1,6 @@
 ﻿using ClinicManagementSystem.Models;
 using ClinicManagementSystem.Service;
+using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -119,28 +120,50 @@ namespace ClinicManagementSystem.Controllers
         }
 
 
-
-
-
-
         // GET: ReceptionistController/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (employeeId == null)
+                return RedirectToAction("Index", "Login");
+
+            var patient = _receptionistService.GetPatientById(id);
+
+            if (patient == null)
+                return NotFound();
+
+            return View(patient);
         }
 
         // POST: ReceptionistController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(Patient patient) // Error not all code paths return a value
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
+
+                if (employeeId == null)
+                    return RedirectToAction("Index","Login");
+
+                if (ModelState.IsValid)
+                {
+                    int rows = _receptionistService.UpdatePatient(patient, employeeId.Value);
+
+                    if (rows > 0)
+                    {
+                        TempData["SuccessMessage"] = "Patient updated successfully!";
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+                TempData["ErrorMessage"] = "Update failed!";
+                return View(patient);
             }
             catch
             {
-                return View();
+                return View(patient);
             }
         }
 
@@ -164,5 +187,56 @@ namespace ClinicManagementSystem.Controllers
                 return View();
             }
         }
+
+        public IActionResult ViewAppointments(
+            int? patientId,
+            int? doctorId,
+            DateTime? appointmentDate,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
+
+            if (employeeId == null)
+                return RedirectToAction("Index", "Login");
+
+            var list = _receptionistService.ViewAppointments(
+                patientId, doctorId, appointmentDate, fromDate, toDate);
+
+            return View(list);
+        }
+
+        [HttpPost]
+        public IActionResult GenerateBill(int appointmentId)
+        {
+            var result = _receptionistService.CreatePatientBill(appointmentId);
+
+            if (!result.IsSuccess)
+                return Json(result);
+
+            var bill = _receptionistService.GetBillById(result.PatientBillId);
+
+            return Json(bill);
+        }
+
+
+        public IActionResult BillDetails(int id)
+        {
+            var bill = _receptionistService.GetBillById(id);
+
+            if (bill == null)
+                return NotFound();
+
+            return View(bill);
+        }
+
+        [HttpGet]
+        public IActionResult GetBillById(int id)
+        {
+            var bill = _receptionistService.GetBillById(id);
+            return Json(bill);
+        }
+
+
     }
 }

@@ -69,20 +69,16 @@ namespace ClinicManagementSystem.Service
             throw new NotImplementedException();
         }
 
-        public Appointment GetAppointmentById(int appointmentId)
+        public Appointment GetAppointmentById(int id)
         {
-            throw new NotImplementedException();
-        }
-
-        public DashboardViewModel GetDashboardData()
-        {
-            return _receptionistRepository.GetDashboardData();
+            return _receptionistRepository.GetAppointmentById(id);
         }
 
         public List<Appointment> GetDoctorAppointmentsToday(int doctorId)
         {
-            throw new NotImplementedException();
+            return _receptionistRepository.GetDoctorAppointmentsToday(doctorId);
         }
+
 
         public DoctorSlotStatus GetDoctorSlotStatus(int doctorId)
         {
@@ -92,7 +88,7 @@ namespace ClinicManagementSystem.Service
 
         public Patient GetPatientById(int patientId)
         {
-            throw new NotImplementedException();
+            return _receptionistRepository.GetPatientById(patientId);
         }
 
 
@@ -107,6 +103,22 @@ namespace ClinicManagementSystem.Service
             }).ToList();
         }
 
+        public List<AppointmentViewModel> ViewAppointments(
+            int? patientId,
+            int? doctorId,
+            DateTime? appointmentDate,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            return _receptionistRepository.ViewAppointments(
+                patientId, doctorId, appointmentDate, fromDate, toDate);
+        }
+
+
+        public PatientBillViewModel GetBillById(int billId)
+        {
+            return _receptionistRepository.GetBillById(billId);
+        }
 
     }
 }
