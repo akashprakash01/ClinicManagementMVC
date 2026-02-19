@@ -1,0 +1,96 @@
+﻿@model List<ClinicManagementSystem.Models.MedicineVM>
+
+@{
+    ViewData["Title"] = "Add Medicines";
+}
+
+<h2 class="mb-4">Prescribe Medicines</h2>
+
+<div class="container">
+
+    <!-- Available Medicines Table -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            Available Medicines
+        </div>
+        <div class="card-body">
+
+            @if (!Model.Any())
+            {
+                <p class="text-danger">No more medicines available.</p>
+            }
+            else
+            {
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Medicine Name</th>
+                            <th>Description</th>
+                            <th>Dosage</th>
+                            <th>Frequency</th>
+                            <th>Duration</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <form asp-action="AddPrescriptionMedicine" method="post">
+                                <td>
+                                    @item.MedicineName
+                                    <input type="hidden" name="PrescriptionId" value="@ViewBag.PrescriptionId" />
+                                    <input type="hidden" name="MedicineId" value="@item.MedicineId" />
+                                </td>
+                                <td>@item.Description</td>
+
+                                <td>
+                                    <input type="text"
+                                           name="Dosage"
+                                           class="form-control"
+                                           placeholder="e.g. 1 Tablet"
+                                           required />
+                                </td>
+
+                                <td>
+                                    <input type="text"
+                                           name="Frequency"
+                                           class="form-control"
+                                           placeholder="e.g. Twice Daily"
+                                           required />
+                                </td>
+
+                                <td>
+                                    <input type="text"
+                                           name="Duration"
+                                           class="form-control"
+                                           placeholder="e.g. 5 Days"
+                                           required />
+                                </td>
+
+                                <td>
+                                    <button type="submit"
+                                            class="btn btn-success btn-sm">
+                                        Add
+                                    </button>
+                                </td>
+                                </form>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+        </div>
+    </div>
+
+    <!-- Proceed Button -->
+    <div class="text-end">
+        <a asp-action="AddLabTests"
+           asp-route-prescriptionId="@ViewBag.PrescriptionId"
+           class="btn btn-primary">
+            Proceed to Lab Tests →
+        </a>
+    </div>
+
+</div>

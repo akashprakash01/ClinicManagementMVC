@@ -1,4 +1,5 @@
-﻿using ClinicManagementSystem.Service;
+﻿using ClinicManagementSystem.Models;
+using ClinicManagementSystem.Service;
 using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,6 +33,7 @@ namespace ClinicManagementSystem.Controllers
         }
 
         [HttpPost]
+        [HttpPost]
         public IActionResult AddPrescription(AddPrescriptionVM model)
         {
             if (!ModelState.IsValid)
@@ -39,9 +41,28 @@ namespace ClinicManagementSystem.Controllers
 
             int prescriptionId = _doctorService.AddPrescription(model);
 
-            // Redirect to Lab Test selection page
-            return RedirectToAction("AddLabTests",
+            // 👇 Redirect to Medicine page first
+            return RedirectToAction("AddMedicines",
                 new { prescriptionId = prescriptionId });
+        }
+
+        public IActionResult AddMedicines(int prescriptionId)
+        {
+            var medicines = _doctorService.GetAvailableMedicines(prescriptionId);
+
+            ViewBag.PrescriptionId = prescriptionId;
+
+            return View(medicines);
+        }
+
+
+        [HttpPost]
+        public IActionResult AddPrescriptionMedicine(AddPrescriptionMedicineVM model)
+        {
+            _doctorService.AddPrescriptionMedicine(model);
+
+            return RedirectToAction("AddMedicines",
+                new { prescriptionId = model.PrescriptionId });
         }
 
         public IActionResult AddLabTests(int prescriptionId)
