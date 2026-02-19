@@ -1,27 +1,81 @@
 ﻿@model List<MedicineType>
 
 @{
-    ViewData["Title"] = "Pharmacist Dashboard";
+    ViewData["Title"] = "Medicine Types";
     Layout = "~/Views/Shared/PharmacistNav.cshtml";
 }
-<h2>Medicine Types</h2>
 
-<a asp-action="AddMedicineType" class="btn btn-success mb-2">Add New</a>
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Medicine Types</h2>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+                <i class="fas fa-plus"></i> Add New Type
+            </button>
+        </div>
+    </div>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Type Name</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.MedicineTypeId</td>
-                <td>@item.TypeName</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Type Name</th>
+                                <th>Created Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.MedicineTypeId</td>
+                                        <td>@item.TypeName</td>
+                                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No medicine types found</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Medicine Type Modal -->
+<div class="modal fade" id="addTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Add Medicine Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="AddMedicineType" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Type Name</label>
+                        <input name="TypeName" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

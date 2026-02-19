@@ -1,0 +1,143 @@
+﻿@model ClinicManagementSystem.ViewModel.FinalBillViewModel
+
+@{
+    ViewData["Title"] = "Final Bill";
+    Layout = "~/Views/Shared/PharmacistNav.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col text-end">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a asp-action="DownloadBillPDF" asp-route-billId="@Model.PharmacyBillId" class="btn btn-success">
+                <i class="fas fa-download"></i> Download PDF
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="card" id="billToPrint">
+        <div class="card-header bg-primary text-white text-center">
+            <h3>Pharmacy Bill</h3>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-6">
+                    <h5>Clinic Management System</h5>
+                    <p>123 Healthcare Avenue<br />City, State - 123456<br />Phone: +91 1234567890</p>
+                </div>
+                <div class="col-6 text-end">
+                    <h5>Bill #: @Model.BillNumber</h5>
+                    <p>Date: @Model.BillDate.ToString("dd/MM/yyyy hh:mm tt")</p>
+                    <p>
+                        Status:
+                        @if (Model.PaymentStatus == 0)
+                        {
+                            <span class="badge bg-warning">Unpaid</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Paid</span>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-6">
+                    <h6>Patient Details:</h6>
+                    <p><strong>Name:</strong> @Model.PatientName</p>
+                </div>
+                <div class="col-6">
+                    <h6>Doctor Details:</h6>
+                    <p><strong>Name:</strong> @Model.DoctorName</p>
+                    <p><strong>Prescription Date:</strong> @Model.PrescriptionDate.ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Medicine</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Sub Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int slNo = 1;
+                        decimal total = 0;
+                    }
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@slNo</td>
+                            <td>@item.MedicineName</td>
+                            <td>@item.Dosage</td>
+                            <td>@item.Frequency</td>
+                            <td>@item.Quantity</td>
+                            <td>₹ @item.UnitPrice.ToString("N2")</td>
+                            <td>₹ @item.SubTotal.ToString("N2")</td>
+                        </tr>
+                        slNo++;
+                        total += item.SubTotal;
+                    }
+                </tbody>
+                <tfoot class="table-info">
+                    <tr>
+                        <td colspan="6" class="text-end"><strong>Total Amount:</strong></td>
+                        <td><strong>₹ @total.ToString("N2")</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" class="text-end"><strong>Amount in Words:</strong></td>
+                        <td>@Model.TotalAmountInWords</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="row mt-4">
+                <div class="col-6">
+                    <p>_________________________</p>
+                    <p>Pharmacist Signature</p>
+                </div>
+                <div class="col-6 text-end">
+                    <p>_________________________</p>
+                    <p>Patient Signature</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-3 text-muted">
+                <small>** This is a computer generated bill **</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style media="print">
+    body * {
+        visibility: hidden;
+    }
+
+    #billToPrint, #billToPrint * {
+        visibility: visible;
+    }
+
+    #billToPrint {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .btn {
+        display: none;
+    }
+</style>

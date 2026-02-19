@@ -1,131 +1,180 @@
-﻿@{
+﻿@model List<ClinicManagementSystem.ViewModel.PendingPrescriptionVM>
+
+@{
     ViewData["Title"] = "Pharmacist Dashboard";
     Layout = "~/Views/Shared/PharmacistNav.cshtml";
 }
 
-
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Pending Prescriptions</h2>
+        </div>
+    </div>
 
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Prescription ID</th>
+                                <th>Patient Name</th>
+                                <th>Doctor Name</th>
+                                <th>Date</th>
+                                <th>Pending Medicines</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.PrescriptionId</td>
+                                        <td>@item.PatientName</td>
+                                        <td>@item.DoctorName</td>
+                                        <td>@item.PrescriptionDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="badge bg-danger">
+                                                @item.PendingCount
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a asp-action="Dispense"
+                                               asp-route-prescriptionId="@item.PrescriptionId"
+                                               class="btn btn-primary btn-sm">
+                                                <i class="fas fa-pills"></i> Dispense
+                                            </a>
 
-<!-- ================= ADD MEDICINE TYPE MODAL ================= -->
-
-<div class="modal fade" id="medicineTypeModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <form asp-action="AddMedicineType" method="post">
-
-                <div class="modal-header">
-                    <h5>Add Medicine Type</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        No pending prescriptions found
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="modal-body">
-                    <label>Type Name</label>
-                    <input name="TypeName" class="form-control" />
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-primary">Save</button>
-                </div>
-
-            </form>
-
+            </div>
         </div>
     </div>
 </div>
 
-<!-- ================= ADD MEDICINE MODAL ================= -->
+<!-- Include Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<div class="modal fade" id="medicineModal">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
 
-            <form asp-action="AddMedicine" method="post">
+@section Modals {
 
-                <div class="modal-header">
-                    <h5>Add Medicine</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+    <div class="modal fade" id="medicineTypeModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="AddMedicineType" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5>Add Medicine Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input name="TypeName" class="form-control" required />
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                <div class="modal-body">
+    <div class="modal fade" id="medicineModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="AddMedicine" method="post">
+                    @Html.AntiForgeryToken()
 
-                    <div class="mb-2">
-                        <label>Name</label>
-                        <input name="MedicineName" class="form-control" />
+                    <div class="modal-header">
+                        <h5>Add Medicine</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
-                    <div class="mb-2">
-                        <label>Description</label>
-                        <input name="Description" class="form-control" />
+                    <div class="modal-body">
+
+                        <input name="MedicineName" class="form-control mb-2" required />
+
+                        <select name="MedicineTypeId" class="form-control mb-2"
+                                asp-items="ViewBag.MedicineTypes"></select>
+
+                        <input name="Price" type="number" step="0.01" class="form-control mb-2" required />
+                        <input name="QuantityStock" type="number" class="form-control mb-2" required />
+
                     </div>
 
-                    <div class="mb-2">
-                        <label>Type</label>
-                        <select name="MedicineTypeId"
-                                class="form-control"
-                                asp-items="ViewBag.MedicineTypes">
-                            <option value="">-- Select --</option>
+                    <div class="modal-footer">
+                        <button class="btn btn-success">Save</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="billModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="CreatePharmacyBill" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="modal-header">
+                        <h5>Create Bill</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <select name="prescriptionId" class="form-control">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var p in Model)
+                                {
+                                    <option value="@p.PrescriptionId">
+                                        @p.PrescriptionId - @p.PatientName
+                                    </option>
+                                }
+                            }
                         </select>
                     </div>
 
-                    <div class="mb-2">
-                        <label>Price</label>
-                        <input name="Price" class="form-control" />
+                    <div class="modal-footer">
+                        <button class="btn btn-success">Create</button>
                     </div>
-
-                    <div class="mb-2">
-                        <label>Stock</label>
-                        <input name="QuantityStock" class="form-control" />
-                    </div>
-
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-success">Save</button>
-                </div>
-
-            </form>
-
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ================= CREATE BILL MODAL ================= -->
+}
 
-<div class="modal fade" id="billModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <form asp-action="CreateBill" method="post">
-
-                <div class="modal-header">
-                    <h5>Create Bill</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-
-                    <label>Prescription Id</label>
-                    <input name="PrescriptionId" class="form-control" />
-
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-primary">Create</button>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-</div>

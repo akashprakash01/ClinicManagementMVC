@@ -2,83 +2,51 @@
 @{
     Layout = "~/Views/Shared/ReceptionistNav.cshtml";
 }
-<!-- jQuery FIRST -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- Bootstrap (if not already) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <h2>Patients List</h2>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
+<div class="mb-3 text-end">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+        <i class="fas fa-user-plus"></i> Add Patient
+    </button>
+</div>
 
 
-<form method="get" asp-action="Index" class="mb-4">
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="input-group">
 
-    <div class="row">
-
-        <div class="col-md-4">
             <input type="text"
-                   name="name"
+                   id="searchBox"
                    class="form-control"
-                   placeholder="Search by Name"
-                   value="@Context.Request.Query["name"]" />
-        </div>
+                   placeholder="Search by Patient ID / Name / Contact" />
 
-        <div class="col-md-4">
-            <input type="text"
-                   name="contact"
-                   class="form-control"
-                   placeholder="Search by Contact"
-                   value="@Context.Request.Query["contact"]" />
-        </div>
-
-        <div class="col-md-4">
-
-            <button class="btn btn-primary">
-                 Search
+            <button class="btn btn-outline-secondary"
+                    type="button"
+                    id="clearSearch">
+                Clear
             </button>
 
-            <a asp-action="Index" class="btn btn-secondary">
-                Clear
-            </a>
-
         </div>
-
     </div>
+</div>
 
-</form>
 
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
         <tr>
-            <th>Patient No</th>
+            <th>MMR No</th>
             <th>Name</th>
-            <th>Date Of Birth</th>
+            <th>DOB</th>
             <th>Gender</th>
             <th>Contact</th>
             <th>Address</th>
             <th>Book Appointment</th>
             <th>Actions</th>
-
         </tr>
     </thead>
 
-    <tbody>
+    <tbody id="patientTable">
         @foreach (var patient in Model)
         {
             <tr>
@@ -88,6 +56,7 @@
                 <td>@patient.Gender</td>
                 <td>@patient.Contact</td>
                 <td>@patient.Address</td>
+
                 <td>
                     <button class="btn btn-success btn-sm"
                             onclick="openAppointmentModal(@patient.PatientId,0)">
@@ -99,22 +68,85 @@
                         Tomorrow
                     </button>
                 </td>
+
                 <td>
                     <a asp-action="Edit"
                        asp-route-id="@patient.PatientId"
-                       class="btn btn-primary btn-sm">
-                        Edit
-                    </a>
+                       class="btn btn-primary btn-sm">Edit</a>
                 </td>
-
             </tr>
         }
     </tbody>
 </table>
 
 
+<div class="modal fade" id="addPatientModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
 
-<!-- APPOINTMENT MODAL -->
+            <div class="modal-header">
+                <h5>Add Patient</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="addPatientForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-2">
+                        <input name="Name" id="addName"
+                               class="form-control"
+                               placeholder="Name"
+                               required
+                               minlength="3"
+                               maxlength="50" />
+                        <span class="text-danger validation-message" data-valmsg-for="Name"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <input name="DOB" id="addDOB"
+                               type="date"
+                               class="form-control"
+                               required />
+                        <span class="text-danger validation-message" data-valmsg-for="DOB"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <select name="Gender" id="addGender" class="form-control" required>
+                            <option value="">Select Gender</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                        <span class="text-danger validation-message" data-valmsg-for="Gender"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <input name="Contact" id="addContact"
+                               class="form-control"
+                               placeholder="Contact"
+                               required
+                               pattern="^[6-9][0-9]{9}$" />
+                        <span class="text-danger validation-message" data-valmsg-for="Contact"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <textarea name="Address"
+                                  id="addAddress"
+                                  class="form-control"
+                                  placeholder="Address"
+                                  maxlength="250"></textarea>
+                    </div>
+
+                    <button class="btn btn-success w-100">Save</button>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 <div class="modal fade" id="appointmentModal">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -139,203 +171,275 @@
             </div>
 
             <div class="modal-footer">
-                <button id="bookBtn" class="btn btn-primary" onclick="bookAppointment()">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button class="btn btn-primary"
+                        onclick="bookAppointment()">
                     Book
                 </button>
+
             </div>
+
 
         </div>
     </div>
 </div>
 
 
-
-<script>
-
-    let selectedDate;
-
-    //-----------------------------------------
-    // FORMAT DATE (LOCAL SAFE)
-    //-----------------------------------------
-    function formatDate(date)
-    {
-        return date.getFullYear() + "-" +
-            String(date.getMonth()+1).padStart(2,'0') + "-" +
-            String(date.getDate()).padStart(2,'0');
-    }
+@section Scripts {
+    <script>
 
 
-    //-----------------------------------------
-    // OPEN MODAL
-    //-----------------------------------------
-    function openAppointmentModal(patientId, dayOffset)
-    {
-        $("#patientId").val(patientId);
+        $(document).ready(function () {
 
-        selectedDate = new Date();
-        selectedDate.setDate(selectedDate.getDate() + dayOffset);
+            // ---------------- ADD PATIENT SUBMIT ----------------
+            $("#addPatientForm").submit(function (e) {
 
-        $("#doctorSelect")
-            .empty()
-            .append(`<option>Loading doctors...</option>`);
+            e.preventDefault();
 
-        $("#slotSelect")
-            .empty()
-            .prop("disabled", true);
+            if (!validatePatientForm("add"))
+                return;
 
-        $("#bookBtn").prop("disabled", true);
+            $.ajax({
+                url: '/Receptionist/CreatePatient',
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {
+                    'RequestVerificationToken':
+                        $('input[name="__RequestVerificationToken"]').val()
+                },
 
-        $.get('/Receptionist/GetAvailableDoctors',
-            { dayOffset: dayOffset },
-            function(data)
-            {
-                $("#doctorSelect").empty();
+                success: function (response) {
 
-                if (!data || data.length === 0)
+                    if (response.success) {
+
+                        alert(response.message);
+
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('addPatientModal')).hide();
+
+                        location.reload();
+                    }
+                    else if (response.errors) {
+
+                        // clear old messages
+                        $("#addPatientForm .validation-message").text("");
+
+                        // show new messages
+                        $.each(response.errors, function (key, messages) {
+
+                            $("#addPatientForm")
+                                .find(`[data-valmsg-for='${key}']`)
+                                .text(messages[0]);
+
+                        });
+                    }
+                    else {
+                        alert(response.message);
+                    }
+                }
+            });
+
+        });
+
+
+
+            // ---------------- SEARCH ----------------
+            $("#clearSearch").hide();
+
+            $("#searchBox").on("keyup", function () {
+
+                let value = $(this).val().toLowerCase();
+
+                $("#clearSearch").toggle(value.length > 0);
+
+                $("#patientTable tr").each(function () {
+
+                    let id = $(this).find("td:eq(0)").text().toLowerCase();
+                    let name = $(this).find("td:eq(1)").text().toLowerCase();
+                    let contact = $(this).find("td:eq(4)").text().toLowerCase();
+
+                    $(this).toggle(
+                        id.includes(value) ||
+                        name.includes(value) ||
+                        contact.includes(value)
+                    );
+                });
+            });
+
+            $("#clearSearch").on("click", function () {
+                $("#searchBox").val("");
+                $("#patientTable tr").show();
+                $(this).hide();
+            });
+
+
+            // ---------------- REAL-TIME VALIDATION ----------------
+            $("#addName, #addDOB, #addGender, #addContact").on("input change", function () {
+                validatePatientForm("add");
+            });
+
+        });
+
+
+        // ---------------- APPOINTMENT MODAL ----------------
+        let selectedDate = null;
+
+        // OPEN MODAL
+        function openAppointmentModal(patientId, dayOffset) {
+
+            $("#patientId").val(patientId);
+
+            selectedDate = new Date();
+            selectedDate.setDate(selectedDate.getDate() + dayOffset);
+
+            $.get('/Receptionist/GetAvailableDoctors',
+                { dayOffset: dayOffset },
+                function (data) {
+
+                    $("#doctorSelect").empty();
+                    $("#slotSelect").empty().prop("disabled", true);
+
+                    data.forEach(doc => {
+                        $("#doctorSelect").append(
+                            `<option value="${doc.doctorId}">
+                                ${doc.doctorName} (${doc.specializationName})
+                            </option>`
+                        );
+                    });
+
+                    $("#doctorSelect").trigger("change");
+                });
+
+            new bootstrap.Modal(document.getElementById('appointmentModal')).show();
+        }
+
+
+        // LOAD SLOTS
+        $("#doctorSelect").on("change", function () {
+
+            let doctorId = $(this).val();
+
+            let formattedDate = selectedDate.toISOString().split('T')[0];
+
+            $.get('/Receptionist/GetSlots',
                 {
-                    $("#doctorSelect").append(`<option>No doctors available</option>`);
-                    return;
+                    doctorId: doctorId,
+                    selectedDate: formattedDate
+                },
+                function (slots) {
+
+                    $("#slotSelect").empty();
+
+                    if (slots.length === 0) {
+                        $("#slotSelect").append(`<option>No slots available</option>`);
+                        return;
+                    }
+
+                    slots.forEach(slot => {
+
+                        $("#slotSelect").append(
+                            `<option
+                                data-start="${slot.startTime}"
+                                data-end="${slot.endTime}">
+                                ${slot.text}
+                            </option>`
+                        );
+
+                    });
+
+
+                    $("#slotSelect").prop("disabled", false);
+                });
+            });
+
+
+        // BOOK APPOINTMENT
+                    function bookAppointment() {
+
+            let selected = $("#slotSelect option:selected");
+
+            let data = {
+                patientId: $("#patientId").val(),
+                doctorId: $("#doctorSelect").val(),
+                start: selected.data("start"),
+                end: selected.data("end")
+            };
+
+            $.post('/Receptionist/BookAppointment', data, function (res) {
+
+                if (res.success) {
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert(res.message);
                 }
 
-                $("#doctorSelect").append(`<option value="">Select Doctor</option>`);
-
-                data.forEach(doc =>
-                {
-                    $("#doctorSelect").append(
-                        `<option value="${doc.doctorId}">
-                            ${doc.doctorName} (${doc.specializationName})
-                        </option>`
-                    );
-                });
-            })
-            .fail(() => alert("Error loading doctors."));
-
-        var modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
-        modal.show();
-    }
-
-
-
-    //-----------------------------------------
-    // LOAD SLOTS
-    //-----------------------------------------
-    $(document).on("change", "#doctorSelect", function ()
-    {
-        let doctorId = parseInt($(this).val());
-
-        if (!doctorId)
-            return;
-
-        $("#slotSelect")
-            .empty()
-            .append(`<option>Loading slots...</option>`)
-            .prop("disabled", true);
-
-        $("#bookBtn").prop("disabled", true);
-
-        $.get('/Receptionist/GetSlots',
-        {
-            doctorId: doctorId,
-            selectedDate: formatDate(selectedDate)
-        },
-        function(data)
-        {
-            $("#slotSelect").empty();
-
-            if (data && data.length > 0)
-            {
-                $("#slotSelect").append(`<option value="">Select Slot</option>`);
-
-                data.forEach(slot =>
-                {
-                    $("#slotSelect").append(
-                        `<option value="${slot.value}">
-                            ${slot.text}
-                        </option>`
-                    );
-                });
-
-                $("#slotSelect").prop("disabled", false);
-            }
-            else
-            {
-                $("#slotSelect").append(`<option>No slots available</option>`);
-            }
-        })
-        .fail(() => alert("Error loading slots."));
-    });
-
-
-
-    //-----------------------------------------
-    // ENABLE BOOK BUTTON ONLY WHEN SLOT SELECTED
-    //-----------------------------------------
-    $(document).on("change", "#slotSelect", function ()
-    {
-        $("#bookBtn").prop("disabled", !$(this).val());
-    });
-
-
-
-    //-----------------------------------------
-    // BOOK APPOINTMENT
-    //-----------------------------------------
-    function bookAppointment()
-    {
-        let patientId = $("#patientId").val();
-        let doctorId = $("#doctorSelect").val();
-        let start = $("#slotSelect").val();
-
-        if(!doctorId || !start)
-        {
-            alert("Please select doctor and slot");
-            return;
+            });
         }
 
-        $("#bookBtn")
-            .prop("disabled", true)
-            .text("Booking...");
 
-        let startDate = new Date(start);
-        let endDate = new Date(startDate.getTime() + 20 * 60000);
 
-        function formatLocal(date)
-        {
-            return date.getFullYear() + "-" +
-                String(date.getMonth()+1).padStart(2,'0') + "-" +
-                String(date.getDate()).padStart(2,'0') + " " +
-                String(date.getHours()).padStart(2,'0') + ":" +
-                String(date.getMinutes()).padStart(2,'0') + ":00";
+
+
+        // ---------------- VALIDATION FUNCTION ----------------
+        function validatePatientForm(prefix) {
+
+            let isValid = true;
+            let form = $(`#${prefix}PatientForm`);
+
+            let name = $(`#${prefix}Name`).val().trim();
+            let dob = $(`#${prefix}DOB`).val();
+            let gender = $(`#${prefix}Gender`).val();
+            let contact = $(`#${prefix}Contact`).val();
+
+            form.find(".validation-message").text("");
+
+            if (name.length < 3) {
+                form.find("[data-valmsg-for='Name']").text("Name must be at least 3 characters");
+                isValid = false;
+            }
+
+            if (!dob) {
+                form.find("[data-valmsg-for='DOB']").text("DOB is required");
+                isValid = false;
+            }
+            else {
+                let birthDate = new Date(dob);
+                let today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (birthDate >= today) {
+                    form.find("[data-valmsg-for='DOB']").text("DOB must be in the past");
+                    isValid = false;
+                }
+            }
+
+            if (!gender) {
+                form.find("[data-valmsg-for='Gender']").text("Please select gender");
+                isValid = false;
+            }
+
+            let contactRegex = /^[6-9][0-9]{9}$/;
+
+            if (!contactRegex.test(contact)) {
+                form.find("[data-valmsg-for='Contact']").text("Enter valid 10 digit mobile number");
+                isValid = false;
+            }
+
+            return isValid;
         }
 
-        $.post('/Receptionist/BookAppointment',
-        {
-            patientId: patientId,
-            doctorId: doctorId,
-            start: formatLocal(startDate),
-            end: formatLocal(endDate)
-        },
-        function(response)
-        {
-            alert(response.message);
 
-            if(response.success)
-                location.reload();
-            else
-            {
-                $("#bookBtn")
-                    .prop("disabled", false)
-                    .text("Book");
-            }
-        })
-        .fail(function()
-        {
-            alert("Booking failed.");
+        function clearValidation(prefix) {
+            $(`#${prefix}PatientForm`).find(".validation-message").text("");
+        }
 
-            $("#bookBtn")
-                .prop("disabled", false)
-                .text("Book");
-        });
-    }
+    </script>
+}
 
-</script>
