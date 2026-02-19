@@ -31,5 +31,15 @@ namespace ClinicManagementSystem.Service
         {
             _doctorRepository.AddPrescriptionLabTest(prescriptionId, labTestId);
         }
+
+        public List<MedicineVM> GetAvailableMedicines(int prescriptionId)
+        {
+            return _doctorRepository.GetAvailableMedicines(prescriptionId);
+        }
+
+        public void AddPrescriptionMedicine(AddPrescriptionMedicineVM model)
+        {
+            _doctorRepository.AddPrescriptionMedicine(model);
+        }
     }
 }

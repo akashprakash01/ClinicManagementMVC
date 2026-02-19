@@ -114,6 +114,55 @@ namespace ClinicManagementSystem.Repository
             return list;
         }
 
+        public List<MedicineVM> GetAvailableMedicines(int prescriptionId)
+        {
+            List<MedicineVM> list = new();
+
+            using (SqlConnection con = new SqlConnection(_connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("sp_Medicines", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@prescriptionId", prescriptionId);
+
+                    con.Open();
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        list.Add(new MedicineVM
+                        {
+                            MedicineId = Convert.ToInt32(reader["medicineId"]),
+                            MedicineName = reader["medicineName"].ToString(),
+                            Description = reader["description"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return list;
+        }
+
+        public void AddPrescriptionMedicine(AddPrescriptionMedicineVM model)
+        {
+            using (SqlConnection con = new SqlConnection(_connectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("sp_AddPrescriptionMedicine", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@prescriptionId", model.PrescriptionId);
+                    cmd.Parameters.AddWithValue("@medicineId", model.MedicineId);
+                    cmd.Parameters.AddWithValue("@dosage", model.Dosage);
+                    cmd.Parameters.AddWithValue("@frequency", model.Frequency);
+                    cmd.Parameters.AddWithValue("@duration", model.Duration);
+
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public void AddPrescriptionLabTest(int prescriptionId, int labTestId)
         {
             using (SqlConnection con = new SqlConnection(_connectionString))

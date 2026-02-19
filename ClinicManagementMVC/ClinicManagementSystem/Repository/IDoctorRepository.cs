@@ -11,6 +11,9 @@ namespace ClinicManagementSystem.Repository
         public List<LabTestVM> GetAvailableLabTests(int prescriptionId);
 
         void AddPrescriptionLabTest(int prescriptionId, int labTestId);
+        public List<MedicineVM> GetAvailableMedicines(int prescriptionId);
+        public void AddPrescriptionMedicine(AddPrescriptionMedicineVM model);
+
 
     }
 }
