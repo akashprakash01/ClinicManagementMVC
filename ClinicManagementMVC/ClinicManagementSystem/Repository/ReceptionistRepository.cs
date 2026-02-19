@@ -609,5 +609,36 @@ namespace ClinicManagementSystem.Repository
 
 
         #endregion
+
+        public List<DoctorDropdownVM> GetDoctors()
+        {
+            List<DoctorDropdownVM> list = new();
+
+            using SqlConnection con = new(_connectionString);
+            using SqlCommand cmd = new(@"
+        SELECT 
+            d.doctorId,
+            CONCAT(e.firstName, ' ', e.lastName) AS doctorName
+        FROM Doctors d
+        INNER JOIN EmployeeProfile e
+            ON d.employeeId = e.employeeId
+        ORDER BY doctorName", con);
+
+            con.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                list.Add(new DoctorDropdownVM
+                {
+                    DoctorId = (int)dr["doctorId"],
+                    DoctorName = dr["doctorName"].ToString()
+                });
+            }
+
+            return list;
+        }
+
+
     }
 }

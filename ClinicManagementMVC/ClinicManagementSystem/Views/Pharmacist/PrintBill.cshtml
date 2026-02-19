@@ -1,0 +1,152 @@
+﻿@model ClinicManagementSystem.ViewModel.FinalBillViewModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Pharmacy Bill #@Model.BillNumber</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 40px;
+        }
+
+        .bill-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .bill-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .clinic-details {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .details-section {
+            margin-bottom: 30px;
+        }
+
+        .table {
+            margin-bottom: 30px;
+        }
+
+            .table th {
+                background-color: #34495e;
+                color: white;
+            }
+
+        .total-section {
+            font-size: 18px;
+            font-weight: bold;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            font-size: 12px;
+            text-align: center;
+            color: #95a5a6;
+        }
+
+        .signature {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bill-header">
+            <div class="bill-title">PHARMACY BILL</div>
+            <div class="clinic-details">
+                <strong>Clinic Management System</strong><br />
+                123 Healthcare Avenue, City - 123456<br />
+                Phone: +91 1234567890 | Email: clinic@example.com
+            </div>
+        </div>
+
+        <div class="row details-section">
+            <div class="col-6">
+                <strong>Bill No:</strong> @Model.BillNumber<br />
+                <strong>Date:</strong> @Model.BillDate.ToString("dd/MM/yyyy hh:mm tt")<br />
+                <strong>Status:</strong> @Model.PaymentStatusText
+            </div>
+            <div class="col-6">
+                <strong>Patient Name:</strong> @Model.PatientName<br />
+                <strong>Doctor Name:</strong> @Model.DoctorName<br />
+                <strong>Prescription Date:</strong> @Model.PrescriptionDate.ToString("dd/MM/yyyy")
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Sub Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int sl = 1;
+                    decimal grandTotal = 0;
+                }
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@sl</td>
+                        <td>@item.MedicineName</td>
+                        <td>@item.Dosage</td>
+                        <td>@item.Frequency</td>
+                        <td>@item.Quantity</td>
+                        <td>₹ @item.UnitPrice.ToString("N2")</td>
+                        <td>₹ @item.SubTotal.ToString("N2")</td>
+                    </tr>
+                    sl++;
+                    grandTotal += item.SubTotal;
+                }
+            </tbody>
+        </table>
+
+        <div class="row">
+            <div class="col-8">
+                <strong>Amount in Words:</strong> @Model.TotalAmountInWords
+            </div>
+            <div class="col-4 text-end total-section">
+                Total Amount: ₹ @grandTotal.ToString("N2")
+            </div>
+        </div>
+
+        <div class="row signature">
+            <div class="col-6">
+                _________________________<br />
+                Pharmacist Signature
+            </div>
+            <div class="col-6 text-end">
+                _________________________<br />
+                Patient Signature
+            </div>
+        </div>
+
+        <div class="footer">
+            ** This is a computer generated bill **
+        </div>
+    </div>
+</body>
+</html>

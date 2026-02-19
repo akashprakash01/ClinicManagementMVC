@@ -31,6 +31,9 @@ namespace ClinicManagementSystem
 
             var app = builder.Build();
 
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");

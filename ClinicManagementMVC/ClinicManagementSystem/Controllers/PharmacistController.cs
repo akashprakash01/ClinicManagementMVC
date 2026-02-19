@@ -3,6 +3,11 @@ using ClinicManagementSystem.Service;
 using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using QuestPDF.Drawing;
 
 namespace ClinicManagementSystem.Controllers
 {
@@ -15,27 +20,42 @@ namespace ClinicManagementSystem.Controllers
             _service = service;
         }
 
-        // ================= DASHBOARD =================
-
+        // ================= DASHBOARD / PENDING PRESCRIPTIONS =================
         public IActionResult Index()
         {
-            LoadMedicineTypeDropdown();
-            return View();
+            try
+            {
+                LoadMedicineTypeDropdown();
+                var pendingList = _service.GetPendingPrescriptions();
+                return View(pendingList);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return View(new List<PendingPrescriptionVM>());
+            }
         }
 
-        // ================= MEDICINE TYPE =================
+        // ================= MEDICINE TYPE MANAGEMENT =================
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult AddMedicineType(MedicineType model)
         {
             try
             {
-                model.CreatedBy = HttpContext.Session.GetInt32("EmployeeId").Value;
+                int? empId = HttpContext.Session.GetInt32("EmployeeId");
 
+                if (empId == null)
+                    throw new Exception("Session expired. Please login again.");
 
-                _service.AddMedicineType(model);
+                model.CreatedBy = empId.Value;
+                bool result = _service.AddMedicineType(model);
 
-                TempData["Success"] = "Medicine Type Added Successfully";
+                if (result)
+                    TempData["Success"] = "Medicine Type Added Successfully";
+                else
+                    TempData["Error"] = "Failed to add medicine type";
             }
             catch (Exception ex)
             {
@@ -47,22 +67,38 @@ namespace ClinicManagementSystem.Controllers
 
         public IActionResult MedicineTypeList()
         {
-            var data = _service.GetMedicineTypes();
-            return View(data);
+            try
+            {
+                var data = _service.GetAllMedicineTypes();
+                return View(data);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return View(new List<MedicineType>());
+            }
         }
 
-        // ================= ADD MEDICINE =================
+        // ================= MEDICINE MANAGEMENT =================
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult AddMedicine(Medicine model)
         {
             try
             {
-                model.CreatedBy = HttpContext.Session.GetInt32("EmployeeId").Value;
+                int? empId = HttpContext.Session.GetInt32("EmployeeId");
 
-                _service.AddMedicine(model);
+                if (empId == null)
+                    throw new Exception("Session expired. Please login again.");
 
-                TempData["Success"] = "Medicine Added Successfully";
+                model.CreatedBy = empId.Value;
+                bool result = _service.AddMedicine(model);
+
+                if (result)
+                    TempData["Success"] = "Medicine Added Successfully";
+                else
+                    TempData["Error"] = "Failed to add medicine";
             }
             catch (Exception ex)
             {
@@ -72,28 +108,72 @@ namespace ClinicManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
-        // ================= VIEW MEDICINES =================
-
         public IActionResult ViewMedicines()
-        {
-            var medicines = _service.GetMedicines();
-            return View(medicines);
-        }
-
-        // ================= CREATE BILL =================
-
-        [HttpPost]
-        public IActionResult CreatePharmacyBill(CreatePharmacyBill model)
         {
             try
             {
-                int billId = _service.CreatePharmacyBill(model.PrescriptionId, 1);
+                var medicines = _service.GetAllMedicines();
+                LoadMedicineTypeDropdown(); // For the add modal
+                return View(medicines);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return View(new List<Medicine>());
+            }
+        }
 
-                return RedirectToAction("BillScreen", new
+        [HttpPost]
+        public IActionResult EditMedicine(Medicine model)
+        {
+            try
+            {
+                bool result = _service.UpdateMedicine(model);
+                if (result)
+                    TempData["Success"] = "Medicine updated successfully";
+                else
+                    TempData["Error"] = "Failed to update medicine";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            return RedirectToAction("ViewMedicines");
+        }
+
+        [HttpPost]
+        public JsonResult DeleteMedicine(int id)
+        {
+            try
+            {
+                bool result = _service.DeleteMedicine(id);
+                return Json(new { success = result, message = result ? "Medicine deleted successfully" : "Failed to delete medicine" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ================= DISPENSE MEDICINE =================
+
+        public IActionResult Dispense(int prescriptionId)
+        {
+            try
+            {
+                var model = _service.GetDispenseViewModel(prescriptionId);
+                if (model == null)
                 {
-                    prescriptionId = model.PrescriptionId,
-                    billId = billId
-                });
+                    TempData["Error"] = "Prescription not found.";
+                    return RedirectToAction("Index");
+                }
+
+                // Check if bill exists
+                var existingBill = _service.GetBillByPrescriptionId(prescriptionId);
+                ViewBag.BillExists = existingBill != null;
+                ViewBag.PharmacyBillId = existingBill?.PharmacyBillId;
+
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -102,43 +182,129 @@ namespace ClinicManagementSystem.Controllers
             }
         }
 
-        // ================= BILL SCREEN =================
+        [HttpPost]
+        public JsonResult DispenseMedicine([FromBody] DispenseMedicineViewModel model)
+        {
+            try
+            {
+                bool result = _service.DispenseMedicine(
+                    model.PrescriptionMedicineId,
+                    model.Quantity,
+                    model.PharmacyBillId);
+
+                return Json(new { success = result, message = result ? "Medicine dispensed successfully" : "Failed to dispense medicine" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ================= CREATE BILL =================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreatePharmacyBill(int prescriptionId)
+        {
+            try
+            {
+                int? empId = HttpContext.Session.GetInt32("EmployeeId");
+
+                if (empId == null)
+                    throw new Exception("Session expired. Please login again.");
+
+                var existingBill = _service.GetBillByPrescriptionId(prescriptionId);
+
+                int billId;
+                if (existingBill != null)
+                {
+                    billId = existingBill.PharmacyBillId;
+                    TempData["Info"] = "Bill already exists for this prescription.";
+                }
+                else
+                {
+                    billId = _service.CreatePharmacyBill(prescriptionId, empId.Value);
+                    TempData["Success"] = "Bill created successfully. Please add medicine items.";
+                }
+
+                return RedirectToAction("BillScreen", new { prescriptionId, billId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        // ================= BILL SCREEN (ADD ITEMS) =================
 
         public IActionResult BillScreen(int prescriptionId, int billId)
         {
-            var vm = _service.GetBillScreen(prescriptionId, billId);
-            ViewBag.PrescriptionId = prescriptionId;
-
-            return View(vm);
+            try
+            {
+                var vm = _service.GetBillScreenViewModel(prescriptionId, billId);
+                if (vm == null)
+                {
+                    TempData["Error"] = "Bill not found.";
+                    return RedirectToAction("Index");
+                }
+                ViewBag.PrescriptionId = prescriptionId;
+                return View(vm);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
         }
 
         // ================= ADD BILL ITEM =================
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult AddBillItem(AddBillItemViewModel model, int prescriptionId)
         {
             try
             {
-                _service.AddBillItem(
+                bool result = _service.AddBillItem(
                     model.PharmacyBillId,
                     model.PrescriptionMedicineId,
                     model.Quantity);
 
-                return RedirectToAction("BillScreen", new
-                {
-                    prescriptionId = prescriptionId,
-                    billId = model.PharmacyBillId
-                });
+                if (result)
+                    TempData["Success"] = "Medicine added to bill successfully.";
+                else
+                    TempData["Error"] = "Failed to add medicine to bill.";
+
+                return RedirectToAction("BillScreen", new { prescriptionId, billId = model.PharmacyBillId });
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
+                return RedirectToAction("BillScreen", new { prescriptionId, billId = model.PharmacyBillId });
+            }
+        }
 
-                return RedirectToAction("BillScreen", new
-                {
-                    prescriptionId = prescriptionId,
-                    billId = model.PharmacyBillId
-                });
+        // ================= REMOVE BILL ITEM =================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RemoveBillItem(int billItemId, int pharmacyBillId, int prescriptionId)
+        {
+            try
+            {
+                bool result = _service.RemoveBillItem(billItemId);
+                if (result)
+                    TempData["Success"] = "Item removed from bill.";
+                else
+                    TempData["Error"] = "Failed to remove item.";
+
+                return RedirectToAction("BillScreen", new { prescriptionId, billId = pharmacyBillId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("BillScreen", new { prescriptionId, billId = pharmacyBillId });
             }
         }
 
@@ -148,30 +314,201 @@ namespace ClinicManagementSystem.Controllers
         {
             try
             {
-                _service.PayBill(billId);
-
-                TempData["Success"] = "Payment completed successfully";
+                bool result = _service.PayBill(billId);
+                if (result)
+                    TempData["Success"] = "Payment completed successfully";
+                else
+                    TempData["Error"] = "Payment failed";
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
             }
 
-            return RedirectToAction("BillScreen", new
-            {
-                prescriptionId = prescriptionId,
-                billId = billId
-            });
+            return RedirectToAction("BillScreen", new { prescriptionId, billId });
         }
 
-        // ================= DROPDOWN =================
+        // ================= GENERATE FINAL BILL =================
+
+        public IActionResult GenerateBill(int billId)
+        {
+            try
+            {
+                var bill = _service.GetFinalBillDetails(billId);
+                if (bill == null)
+                {
+                    TempData["Error"] = "Bill not found.";
+                    return RedirectToAction("Index");
+                }
+                return View("FinalBill", bill);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        // ================= PRINT BILL =================
+
+        public IActionResult PrintBill(int billId)
+        {
+            try
+            {
+                var bill = _service.GetFinalBillDetails(billId);
+                if (bill == null)
+                {
+                    TempData["Error"] = "Bill not found.";
+                    return RedirectToAction("Index");
+                }
+                return View(bill);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        // ================= DOWNLOAD BILL AS PDF =================
+
+        public IActionResult DownloadBillPDF(int billId)
+        {
+            try
+            {
+                var bill = _service.GetFinalBillDetails(billId);
+
+                if (bill == null)
+                    return NotFound();
+
+                var pdfBytes = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(30);
+
+                        page.Content().Column(col =>
+                        {
+                            col.Item().AlignCenter().Text("CLINIC MANAGEMENT SYSTEM")
+                                .FontSize(16).Bold();
+
+                            col.Item().AlignCenter().Text("Pharmacy Bill");
+
+                            col.Item().LineHorizontal(1);
+
+                            col.Item().Text($"Bill No : {bill.BillNumber}");
+                            col.Item().Text($"Patient : {bill.PatientName}");
+                            col.Item().Text($"Doctor  : {bill.DoctorName}");
+                            col.Item().Text($"Date    : {bill.BillDate:dd-MM-yyyy}");
+
+                            col.Item().PaddingVertical(10);
+
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(3);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Text("Medicine").Bold();
+                                    header.Cell().Text("Dosage").Bold();
+                                    header.Cell().Text("Frequency").Bold();
+                                    header.Cell().Text("Qty").Bold();
+                                    header.Cell().Text("Price").Bold();
+                                });
+
+                                foreach (var item in bill.Items)
+                                {
+                                    table.Cell().Text(item.MedicineName);
+                                    table.Cell().Text(item.Dosage);
+                                    table.Cell().Text(item.Frequency);
+                                    table.Cell().Text(item.Quantity.ToString());
+                                    table.Cell().Text($"₹ {item.SubTotal}");
+                                }
+                            });
+
+                            col.Item().AlignRight().Text($"Total : ₹ {bill.TotalAmount}")
+                                .Bold();
+
+                            col.Item().AlignRight().Text(bill.TotalAmountInWords);
+                        });
+                    });
+                }).GeneratePdf();
+
+                return File(pdfBytes, "application/pdf", $"Bill_{bill.BillNumber}.pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+
+        // ================= HELPER METHODS =================
 
         private void LoadMedicineTypeDropdown()
         {
-            ViewBag.MedicineTypes = new SelectList(
-                _service.GetMedicineTypes(),
-                "MedicineTypeId",
-                "TypeName");
+            try
+            {
+                var medicineTypes = _service.GetAllMedicineTypes();
+                ViewBag.MedicineTypes = new SelectList(medicineTypes, "MedicineTypeId", "TypeName");
+            }
+            catch (Exception ex)
+            {
+                ViewBag.MedicineTypes = new SelectList(new List<MedicineType>());
+                TempData["Error"] = "Failed to load medicine types: " + ex.Message;
+            }
+        }
+
+        // ================= ADDITIONAL ACTIONS =================
+
+        [HttpGet]
+        public JsonResult GetMedicineStock(int medicineId)
+        {
+            try
+            {
+                int stock = _service.GetMedicineStock(medicineId);
+                return Json(new { success = true, stock = stock });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetPendingMedicines(int prescriptionId)
+        {
+            try
+            {
+                var medicines = _service.GetPendingPrescriptionMedicines(prescriptionId);
+                return Json(new { success = true, data = medicines });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetBillSummary(int billId)
+        {
+            try
+            {
+                var summary = _service.GetBillSummary(billId);
+                return Json(new { success = true, data = summary });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }
