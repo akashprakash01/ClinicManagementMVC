@@ -2,6 +2,8 @@
 {
     public class PrescriptionLabBillVM
     {
+        public int PrescriptionId { get; set; }   
+
         public string PatientName { get; set; }
 
         public List<LabTestBillItemVM> Tests { get; set; }

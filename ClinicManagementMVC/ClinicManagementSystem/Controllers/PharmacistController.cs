@@ -1,16 +1,19 @@
 ﻿using ClinicManagementSystem.Models;
 using ClinicManagementSystem.Service;
 using ClinicManagementSystem.ViewModel;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
 
 namespace ClinicManagementSystem.Controllers
 {
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+
     public class PharmacistController : Controller
     {
         private readonly IPharmacistService _service;
@@ -18,6 +21,18 @@ namespace ClinicManagementSystem.Controllers
         public PharmacistController(IPharmacistService service)
         {
             _service = service;
+        }
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            int? roleId = HttpContext.Session.GetInt32("RoleId");
+
+            if (roleId == null || roleId != 3)   // 3 = Pharmacist
+            {
+                context.Result = RedirectToAction("Index", "Login");
+                return;
+            }
+
+            base.OnActionExecuting(context);
         }
 
         // ================= DASHBOARD / PENDING PRESCRIPTIONS =================
@@ -509,6 +524,12 @@ namespace ClinicManagementSystem.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Login");
         }
     }
 }

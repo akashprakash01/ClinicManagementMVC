@@ -6,6 +6,8 @@ namespace ClinicManagementSystem.Service
     public interface IPharmacistService
     {
         // Prescription methods
+        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId);
+
         List<PendingPrescriptionVM> GetPendingPrescriptions();
         DispenseViewModel GetDispenseViewModel(int prescriptionId);
         List<PendingPrescriptionMedicineVM> GetPendingPrescriptionMedicines(int prescriptionId);
@@ -30,7 +32,6 @@ namespace ClinicManagementSystem.Service
         bool PayBill(int billId);
         FinalBillViewModel GetFinalBillDetails(int billId);
         BillSummaryViewModel GetBillSummary(int billId);
-        bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId);
         bool CheckMedicineAvailability(int prescriptionMedicineId, int quantity);
     }
 }
