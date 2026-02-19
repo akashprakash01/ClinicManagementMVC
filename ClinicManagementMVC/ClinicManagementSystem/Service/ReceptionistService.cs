@@ -98,9 +98,11 @@ namespace ClinicManagementSystem.Service
 
             return slots.Select(s => new SlotModel
             {
-                Value = s.StartTime.ToString("yyyy-MM-ddTHH:mm:ss"),
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
                 Text = $"{s.StartTime:hh:mm tt} - {s.EndTime:hh:mm tt}"
             }).ToList();
+
         }
 
         public List<AppointmentViewModel> ViewAppointments(
@@ -118,6 +120,12 @@ namespace ClinicManagementSystem.Service
         public PatientBillViewModel GetBillById(int billId)
         {
             return _receptionistRepository.GetBillById(billId);
+        }
+
+
+        public List<DoctorDropdownVM> GetDoctors()
+        {
+            return _receptionistRepository.GetDoctors();
         }
 
     }

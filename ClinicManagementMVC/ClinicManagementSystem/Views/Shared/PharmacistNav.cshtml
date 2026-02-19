@@ -4,48 +4,65 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ClinicManagementSystem</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ClinicManagementSystem.styles.css" asp-append-version="true" />
-    <link href=" rel="stylesheet" type="text/css" />
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark custom-bg">
-            <h1 class="ms-3">Pharmacist Dashboard</h1>
-        </nav>
 
-        <nav class="navbar navbar-expand-lg navbar navbar-dark bg-primary">
-            <div class="container-fluid">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+    <!-- TOP HEADER -->
+    <nav class="navbar navbar-dark custom-bg">
+        <h4 class="ms-3 text-white mb-0">Pharmacist Dashboard</h4>
+    </nav>
 
-                <div class="d-flex align-items-center w-100">
+    <!-- MAIN NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
 
-                    <div>
-                        <button class="btn btn-primary me-2"
-                                data-bs-toggle="modal"
-                                data-bs-target="#medicineTypeModal">
-                            Add Medicine Type
-                        </button>
-                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="MedicineTypeList">Medicine Type List</a>
-                        <button class="btn btn-primary me-2"
-                                data-bs-toggle="modal"
-                                data-bs-target="#medicineModal">
-                            Add Medicine 
-                        </button>
-                        <a class="btn btn-primary me-2" asp-controller="Pharmacist" asp-action="ViewMedicines">Medicine Type List</a>
-                        <button class="btn btn-primary me-2"
-                                data-bs-toggle="modal"
-                                data-bs-target="#billModal">
-                            Add Bill
-                        </button>
-                        <a class="btn btn-primary me-2">View Bill</a>
-                    </div>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                    <!-- Right Side -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+
+                <!-- LEFT SIDE -->
+                <div>
+                    <a class="btn btn-light me-2"
+                       asp-controller="Pharmacist"
+                       asp-action="Index">
+                        Pending Prescriptions
+                    </a>
+                    
+
+                    <a class="btn btn-light me-2"
+                       asp-controller="Pharmacist"
+                       asp-action="MedicineTypeList">
+                        Medicine Type List
+                    </a>
+
+                    <a class="btn btn-light me-2"
+                       asp-controller="Pharmacist"
+                       asp-action="ViewMedicines">
+                        Medicine List
+                    </a>
+
+                    <button class="btn btn-light me-2"
+                            data-bs-toggle="modal"
+                            data-bs-target="#billModal">
+                        Create Bill
+                    </button>
+
+                    
+
+                </div>
+
+                <!-- RIGHT SIDE -->
+                <div class="ms-auto">
+
                     <a class="btn btn-danger ms-auto"
                        asp-controller="Login"
                        asp-action="Index">
@@ -53,19 +70,27 @@
                     </a>
 
                 </div>
+
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+        </div>
+    </nav>
+
+    <!-- PAGE BODY -->
+    <div class="container mt-3">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-
+    <!-- SCRIPTS -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
+    @RenderSection("Modals", required: false)
+
 </body>
 </html>
+

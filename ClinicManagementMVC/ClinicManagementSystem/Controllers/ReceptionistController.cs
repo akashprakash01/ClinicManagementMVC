@@ -52,11 +52,6 @@ namespace ClinicManagementSystem.Controllers
             return View();
         }
 
-        // GET: ReceptionistController/Create
-        public ActionResult CreatePatient()
-        {
-            return View();
-        }
 
         // POST: ReceptionistController/Create
         [HttpPost]
@@ -65,23 +60,46 @@ namespace ClinicManagementSystem.Controllers
         {
             try
             {
-                if (ModelState.IsValid)
+                int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
+
+                if (employeeId == null)
+                    return Json(new { success = false, message = "Session expired" });
+
+                if (!ModelState.IsValid)
                 {
-                    int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToList()
+                        );
 
-                    if (employeeId == null)
-                        return RedirectToAction("Index", "Login");
-
-                    _receptionistService.InsertPatient(patient, employeeId.Value);
+                    return Json(new
+                    {
+                        success = false,
+                        errors
+                    });
                 }
 
-                return RedirectToAction("Index");
+                _receptionistService.InsertPatient(patient, employeeId.Value);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Patient added successfully"
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                return View(patient);
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
             }
         }
+
+
         public JsonResult GetAvailableDoctors(int dayOffset)
         {
             var doctors = _receptionistService.SelectAvailableDoctors(dayOffset);
@@ -112,7 +130,6 @@ namespace ClinicManagementSystem.Controllers
         }
 
         [HttpGet]
-        [HttpGet]
         public JsonResult GetSlots(int doctorId, DateTime selectedDate)
         {
             var slots = _receptionistService.GetDoctorSlots(doctorId, selectedDate);
@@ -139,7 +156,7 @@ namespace ClinicManagementSystem.Controllers
         // POST: ReceptionistController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Patient patient) // Error not all code paths return a value
+        public ActionResult Edit(Patient patient) 
         {
             try
             {
@@ -202,6 +219,8 @@ namespace ClinicManagementSystem.Controllers
 
             var list = _receptionistService.ViewAppointments(
                 patientId, doctorId, appointmentDate, fromDate, toDate);
+
+            ViewBag.Doctors = _receptionistService.GetDoctors();
 
             return View(list);
         }

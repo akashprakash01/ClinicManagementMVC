@@ -1,0 +1,221 @@
+﻿@model ClinicManagementSystem.ViewModel.BillScreenViewModel
+
+@{
+    ViewData["Title"] = "Pharmacy Bill";
+    Layout = "~/Views/Shared/PharmacistNav.cshtml";
+}
+
+<div class="container-fluid">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Pharmacy Bill</h2>
+        </div>
+        <div class="col text-end">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+
+            @if (Model.Bill.PaymentStatus == 0 && Model.BillItems.Any())
+            {
+                <a asp-action="PayBill"
+                   asp-route-billId="@Model.Bill.PharmacyBillId"
+                   asp-route-prescriptionId="@ViewBag.PrescriptionId"
+                   class="btn btn-success"
+                   onclick="return confirm('Confirm payment?')">
+                    <i class="fas fa-credit-card"></i> Pay Bill
+                </a>
+            }
+
+            @if (Model.BillItems.Any())
+            {
+                <a asp-action="GenerateBill"
+                   asp-route-billId="@Model.Bill.PharmacyBillId"
+                   class="btn btn-info">
+                    <i class="fas fa-file-invoice"></i> View Final Bill
+                </a>
+            }
+
+            @if (Model.Bill.PaymentStatus == 1)
+            {
+                <a asp-action="DownloadBillPDF"
+                   asp-route-billId="@Model.Bill.PharmacyBillId"
+                   class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download PDF
+                </a>
+            }
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5>Bill Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Bill ID:</strong> @Model.Bill.PharmacyBillId</p>
+                    <p><strong>Patient:</strong> @Model.Bill.PatientName</p>
+                    <p><strong>Doctor:</strong> @Model.Bill.DoctorName</p>
+                    <p><strong>Date:</strong> @Model.Bill.BillDate.ToString("dd/MM/yyyy hh:mm tt")</p>
+                    <p>
+                        <strong>Status:</strong>
+                        @if (Model.Bill.PaymentStatus == 0)
+                        {
+                            <span class="badge bg-warning">Unpaid</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Paid</span>
+                        }
+                    </p>
+                    <h4 class="text-end">Grand Total: <strong>₹ @Model.TotalAmount.ToString("N2")</strong></h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            @if (Model.PendingMedicines != null && Model.PendingMedicines.Any() && Model.Bill.PaymentStatus == 0)
+            {
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Add Medicine to Bill</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="AddBillItem" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="PharmacyBillId" value="@Model.Bill.PharmacyBillId" />
+                            <input type="hidden" name="prescriptionId" value="@ViewBag.PrescriptionId" />
+
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <label class="form-label">Medicine</label>
+                                    <select name="PrescriptionMedicineId" class="form-select" required>
+                                        <option value="">-- Select Medicine --</option>
+                                        @foreach (var item in Model.PendingMedicines)
+                                        {
+                                            <option value="@item.PrescriptionMedicineId"
+                                                    data-price="@item.Price"
+                                                    data-stock="@item.Quantity">
+                                                @item.MedicineName - @item.Dosage (@item.Quantity in stock)
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Quantity</label>
+                                    <input name="Quantity" type="number" class="form-control" min="1" required />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Price</label>
+                                    <input id="unitPrice" class="form-control" readonly />
+                                </div>
+                                <div class="col-md-2 mt-4">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-plus"></i> Add
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5>Bill Items</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.BillItems != null && Model.BillItems.Any())
+                    {
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Medicine</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Sub Total</th>
+                                    @if (Model.Bill.PaymentStatus == 0)
+                                    {
+                                        <th>Action</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.BillItems)
+                                {
+                                    <tr>
+                                        <td>@item.MedicineName</td>
+                                        <td>@item.Dosage</td>
+                                        <td>@item.Frequency</td>
+                                        <td>@item.Quantity</td>
+                                        <td>₹ @item.UnitPrice.ToString("N2")</td>
+                                        <td>₹ @item.SubTotal.ToString("N2")</td>
+                                        @if (Model.Bill.PaymentStatus == 0)
+                                        {
+                                            <td>
+                                                <form asp-action="RemoveBillItem" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="billItemId" value="@item.PharmacyBillItemId" />
+                                                    <input type="hidden" name="pharmacyBillId" value="@Model.Bill.PharmacyBillId" />
+                                                    <input type="hidden" name="prescriptionId" value="@ViewBag.PrescriptionId" />
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                            onclick="return confirm('Remove this item?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-dark">
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="2"><strong>₹ @Model.TotalAmount.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted py-3">No items added to bill yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('select[name="PrescriptionMedicineId"]').change(function() {
+            var selectedOption = $(this).find('option:selected');
+            var price = selectedOption.data('price');
+            $('#unitPrice').val('₹ ' + (price ? price.toFixed(2) : '0.00'));
+        });
+    </script>
+}

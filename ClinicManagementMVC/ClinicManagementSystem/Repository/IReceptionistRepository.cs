@@ -33,5 +33,8 @@ namespace ClinicManagementSystem.Repository
 
         PatientBillViewModel GetBillById(int billId);
 
+        List<DoctorDropdownVM> GetDoctors();
+
+
     }
 }

@@ -5,24 +5,32 @@ namespace ClinicManagementSystem.Service
 {
     public interface IPharmacistService
     {
-        // Medicine Type
-        void AddMedicineType(MedicineType model);
-        List<MedicineType> GetMedicineTypes();
+        // Prescription methods
+        List<PendingPrescriptionVM> GetPendingPrescriptions();
+        DispenseViewModel GetDispenseViewModel(int prescriptionId);
+        List<PendingPrescriptionMedicineVM> GetPendingPrescriptionMedicines(int prescriptionId);
 
-        // Medicine
-        void AddMedicine(Medicine model);
-        List<Medicine> GetMedicines();
+        // Medicine methods
+        List<Medicine> GetAllMedicines();
+        bool AddMedicine(Medicine medicine);
+        bool UpdateMedicine(Medicine medicine);
+        bool DeleteMedicine(int id);
+        int GetMedicineStock(int medicineId);
 
-        // Billing
+        // Medicine Type methods
+        List<MedicineType> GetAllMedicineTypes();
+        bool AddMedicineType(MedicineType medicineType);
+
+        // Bill methods
+        PharmacyBill GetBillByPrescriptionId(int prescriptionId);
         int CreatePharmacyBill(int prescriptionId, int createdBy);
-        PharmacyBill GetBillByPrescription(int prescriptionId);
-        AddBillItemViewModel GetBillScreen(int prescriptionId, int billId);
-
-        void AddBillItem(int billId, int prescriptionMedicineId, int quantity);
-
-        void PayBill(int billId);
-
-        // Prescription Medicines
-        List<PrescriptionMedicine> GetPendingPrescriptionMedicines(int prescriptionId);
+        BillScreenViewModel GetBillScreenViewModel(int prescriptionId, int billId);
+        bool AddBillItem(int pharmacyBillId, int prescriptionMedicineId, int quantity);
+        bool RemoveBillItem(int billItemId);
+        bool PayBill(int billId);
+        FinalBillViewModel GetFinalBillDetails(int billId);
+        BillSummaryViewModel GetBillSummary(int billId);
+        bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId);
+        bool CheckMedicineAvailability(int prescriptionMedicineId, int quantity);
     }
 }

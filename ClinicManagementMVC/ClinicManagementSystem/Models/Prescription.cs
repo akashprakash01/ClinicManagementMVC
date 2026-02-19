@@ -3,13 +3,10 @@
     public class Prescription
     {
         public int PrescriptionId { get; set; }
-        public string Symptoms { get; set; }
-        public string Diagnosis { get; set; }
-        public string Advice { get; set; }
-        public string PatientNotes { get; set; }
-        public DateTime FollowUpDate { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public int AppointmentId { get; set; }
+        public int PatientId { get; set; }
         public int DoctorId { get; set; }
+        public DateTime PrescriptionDate { get; set; }
+        public string PatientName { get; set; }
+        public string DoctorName { get; set; }
     }
 }
