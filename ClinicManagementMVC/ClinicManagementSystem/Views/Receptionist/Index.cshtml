@@ -11,6 +11,7 @@
     </button>
 </div>
 
+@*========================= Search box ====================*@
 
 <div class="row mb-3">
     <div class="col-md-4">
@@ -31,6 +32,7 @@
     </div>
 </div>
 
+@*========================= Available Patients List ====================*@
 
 <table class="table table-bordered table-striped">
     <thead class="table-dark">
@@ -70,15 +72,17 @@
                 </td>
 
                 <td>
-                    <a asp-action="Edit"
-                       asp-route-id="@patient.PatientId"
-                       class="btn btn-primary btn-sm">Edit</a>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="openEditModal(@patient.PatientId)">
+                        Edit
+                    </button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+@*========================= Add Patient modal form ====================*@
 
 <div class="modal fade" id="addPatientModal">
     <div class="modal-dialog">
@@ -146,6 +150,7 @@
     </div>
 </div>
 
+@*========================= Appointment modal form ====================*@
 
 <div class="modal fade" id="appointmentModal">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -190,15 +195,70 @@
     </div>
 </div>
 
+@*========================= Edit Patient modal form ====================*@
+<div class="modal fade" id="editPatientModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>Edit Patient</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <form id="editPatientForm">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" id="editPatientId" name="PatientId" />
+
+                    <div class="mb-2">
+                        <label>Name</label>
+                        <input id="editName" name="Name" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>DOB</label>
+                        <input type="date" id="editDOB" name="DOB" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Gender</label>
+                        <select id="editGender" name="Gender" class="form-control">
+                            <option value="">Select</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Contact</label>
+                        <input id="editContact" name="Contact" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Address</label>
+                        <textarea id="editAddress" name="Address" class="form-control"></textarea>
+                    </div>
+
+                    <button class="btn btn-success w-100">Update</button>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
 @section Scripts {
-    <script>
+<script>
 
+    $(document).ready(function () {
 
-        $(document).ready(function () {
-
-            // ---------------- ADD PATIENT SUBMIT ----------------
-            $("#addPatientForm").submit(function (e) {
+        // ---------------- ADD PATIENT SUBMIT ----------------
+        $("#addPatientForm").submit(function (e) {
 
             e.preventDefault();
 
@@ -227,10 +287,8 @@
                     }
                     else if (response.errors) {
 
-                        // clear old messages
                         $("#addPatientForm .validation-message").text("");
 
-                        // show new messages
                         $.each(response.errors, function (key, messages) {
 
                             $("#addPatientForm")
@@ -247,199 +305,234 @@
 
         });
 
+        // ---------------- EDIT PATIENT SUBMIT ----------------
+        $("#editPatientForm").submit(function (e) {
 
+            e.preventDefault();
 
-            // ---------------- SEARCH ----------------
-            $("#clearSearch").hide();
+            $.ajax({
+                url: '/Receptionist/Edit',
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {
+                    'RequestVerificationToken':
+                        $('#editPatientForm input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
 
-            $("#searchBox").on("keyup", function () {
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('editPatientModal')
+                    ).hide();
 
-                let value = $(this).val().toLowerCase();
-
-                $("#clearSearch").toggle(value.length > 0);
-
-                $("#patientTable tr").each(function () {
-
-                    let id = $(this).find("td:eq(0)").text().toLowerCase();
-                    let name = $(this).find("td:eq(1)").text().toLowerCase();
-                    let contact = $(this).find("td:eq(4)").text().toLowerCase();
-
-                    $(this).toggle(
-                        id.includes(value) ||
-                        name.includes(value) ||
-                        contact.includes(value)
-                    );
-                });
-            });
-
-            $("#clearSearch").on("click", function () {
-                $("#searchBox").val("");
-                $("#patientTable tr").show();
-                $(this).hide();
-            });
-
-
-            // ---------------- REAL-TIME VALIDATION ----------------
-            $("#addName, #addDOB, #addGender, #addContact").on("input change", function () {
-                validatePatientForm("add");
+                    location.reload();
+                }
             });
 
         });
 
+        // ---------------- SEARCH ----------------
+        $("#clearSearch").hide();
 
-        // ---------------- APPOINTMENT MODAL ----------------
-        let selectedDate = null;
+        $("#searchBox").on("keyup", function () {
 
-        // OPEN MODAL
-        function openAppointmentModal(patientId, dayOffset) {
+            let value = $(this).val().toLowerCase();
 
-            $("#patientId").val(patientId);
+            $("#clearSearch").toggle(value.length > 0);
 
-            selectedDate = new Date();
-            selectedDate.setDate(selectedDate.getDate() + dayOffset);
+            $("#patientTable tr").each(function () {
 
-            $.get('/Receptionist/GetAvailableDoctors',
-                { dayOffset: dayOffset },
-                function (data) {
+                let id = $(this).find("td:eq(0)").text().toLowerCase();
+                let name = $(this).find("td:eq(1)").text().toLowerCase();
+                let contact = $(this).find("td:eq(4)").text().toLowerCase();
 
-                    $("#doctorSelect").empty();
-                    $("#slotSelect").empty().prop("disabled", true);
+                $(this).toggle(
+                    id.includes(value) ||
+                    name.includes(value) ||
+                    contact.includes(value)
+                );
+            });
+        });
 
-                    data.forEach(doc => {
-                        $("#doctorSelect").append(
-                            `<option value="${doc.doctorId}">
-                                ${doc.doctorName} (${doc.specializationName})
-                            </option>`
-                        );
-                    });
+        $("#clearSearch").on("click", function () {
+            $("#searchBox").val("");
+            $("#patientTable tr").show();
+            $(this).hide();
+        });
 
-                    $("#doctorSelect").trigger("change");
+        // ---------------- REAL-TIME VALIDATION ----------------
+        $("#addName, #addDOB, #addGender, #addContact").on("input change", function () {
+            validatePatientForm("add");
+        });
+
+    });
+
+
+    // ---------------- APPOINTMENT MODAL ----------------
+    let selectedDate = null;
+
+    function openAppointmentModal(patientId, dayOffset) {
+
+        $("#patientId").val(patientId);
+
+        selectedDate = new Date();
+        selectedDate.setDate(selectedDate.getDate() + dayOffset);
+
+        $.get('/Receptionist/GetAvailableDoctors',
+            { dayOffset: dayOffset },
+            function (data) {
+
+                $("#doctorSelect").empty();
+                $("#slotSelect").empty().prop("disabled", true);
+
+                data.forEach(doc => {
+                    $("#doctorSelect").append(
+                        `<option value="${doc.doctorId}">
+                            ${doc.doctorName} (${doc.specializationName})
+                        </option>`
+                    );
                 });
 
-            new bootstrap.Modal(document.getElementById('appointmentModal')).show();
-        }
+                $("#doctorSelect").trigger("change");
+            });
+
+        new bootstrap.Modal(document.getElementById('appointmentModal')).show();
+    }
 
 
-        // LOAD SLOTS
-        $("#doctorSelect").on("change", function () {
+    // LOAD SLOTS
+    $("#doctorSelect").on("change", function () {
 
-            let doctorId = $(this).val();
+        let doctorId = $(this).val();
 
-            let formattedDate = selectedDate.toISOString().split('T')[0];
+        let formattedDate = selectedDate.toISOString().split('T')[0];
 
-            $.get('/Receptionist/GetSlots',
-                {
-                    doctorId: doctorId,
-                    selectedDate: formattedDate
-                },
-                function (slots) {
+        $.get('/Receptionist/GetSlots',
+            {
+                doctorId: doctorId,
+                selectedDate: formattedDate
+            },
+            function (slots) {
 
-                    $("#slotSelect").empty();
+                $("#slotSelect").empty();
 
-                    if (slots.length === 0) {
-                        $("#slotSelect").append(`<option>No slots available</option>`);
-                        return;
-                    }
+                if (slots.length === 0) {
+                    $("#slotSelect").append(`<option>No slots available</option>`);
+                    return;
+                }
 
-                    slots.forEach(slot => {
+                slots.forEach(slot => {
 
-                        $("#slotSelect").append(
-                            `<option
-                                data-start="${slot.startTime}"
-                                data-end="${slot.endTime}">
-                                ${slot.text}
-                            </option>`
-                        );
+                    $("#slotSelect").append(
+                        `<option
+                            data-start="${slot.startTime}"
+                            data-end="${slot.endTime}">
+                            ${slot.text}
+                        </option>`
+                    );
 
-                    });
-
-
-                    $("#slotSelect").prop("disabled", false);
                 });
+
+                $("#slotSelect").prop("disabled", false);
             });
+    });
 
 
-        // BOOK APPOINTMENT
-                    function bookAppointment() {
+    // BOOK APPOINTMENT
+    function bookAppointment() {
 
-            let selected = $("#slotSelect option:selected");
+        let selected = $("#slotSelect option:selected");
 
-            let data = {
-                patientId: $("#patientId").val(),
-                doctorId: $("#doctorSelect").val(),
-                start: selected.data("start"),
-                end: selected.data("end")
-            };
+        let data = {
+            patientId: $("#patientId").val(),
+            doctorId: $("#doctorSelect").val(),
+            start: selected.data("start"),
+            end: selected.data("end")
+        };
 
-            $.post('/Receptionist/BookAppointment', data, function (res) {
+        $.post('/Receptionist/BookAppointment', data, function (res) {
 
-                if (res.success) {
-                    alert(res.message);
-                    location.reload();
-                } else {
-                    alert(res.message);
-                }
+            if (res.success) {
+                alert(res.message);
+                location.reload();
+            } else {
+                alert(res.message);
+            }
 
-            });
+        });
+    }
+
+
+    // ---------------- VALIDATION FUNCTION ----------------
+    function validatePatientForm(prefix) {
+
+        let isValid = true;
+        let form = $(`#${prefix}PatientForm`);
+
+        let name = $(`#${prefix}Name`).val().trim();
+        let dob = $(`#${prefix}DOB`).val();
+        let gender = $(`#${prefix}Gender`).val();
+        let contact = $(`#${prefix}Contact`).val();
+
+        form.find(".validation-message").text("");
+
+        if (name.length < 3) {
+            form.find("[data-valmsg-for='Name']").text("Name must be at least 3 characters");
+            isValid = false;
         }
 
+        if (!dob) {
+            form.find("[data-valmsg-for='DOB']").text("DOB is required");
+            isValid = false;
+        }
+        else {
+            let birthDate = new Date(dob);
+            let today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-
-
-
-        // ---------------- VALIDATION FUNCTION ----------------
-        function validatePatientForm(prefix) {
-
-            let isValid = true;
-            let form = $(`#${prefix}PatientForm`);
-
-            let name = $(`#${prefix}Name`).val().trim();
-            let dob = $(`#${prefix}DOB`).val();
-            let gender = $(`#${prefix}Gender`).val();
-            let contact = $(`#${prefix}Contact`).val();
-
-            form.find(".validation-message").text("");
-
-            if (name.length < 3) {
-                form.find("[data-valmsg-for='Name']").text("Name must be at least 3 characters");
+            if (birthDate >= today) {
+                form.find("[data-valmsg-for='DOB']").text("DOB must be in the past");
                 isValid = false;
             }
-
-            if (!dob) {
-                form.find("[data-valmsg-for='DOB']").text("DOB is required");
-                isValid = false;
-            }
-            else {
-                let birthDate = new Date(dob);
-                let today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                if (birthDate >= today) {
-                    form.find("[data-valmsg-for='DOB']").text("DOB must be in the past");
-                    isValid = false;
-                }
-            }
-
-            if (!gender) {
-                form.find("[data-valmsg-for='Gender']").text("Please select gender");
-                isValid = false;
-            }
-
-            let contactRegex = /^[6-9][0-9]{9}$/;
-
-            if (!contactRegex.test(contact)) {
-                form.find("[data-valmsg-for='Contact']").text("Enter valid 10 digit mobile number");
-                isValid = false;
-            }
-
-            return isValid;
         }
 
-
-        function clearValidation(prefix) {
-            $(`#${prefix}PatientForm`).find(".validation-message").text("");
+        if (!gender) {
+            form.find("[data-valmsg-for='Gender']").text("Please select gender");
+            isValid = false;
         }
 
-    </script>
+        let contactRegex = /^[6-9][0-9]{9}$/;
+
+        if (!contactRegex.test(contact)) {
+            form.find("[data-valmsg-for='Contact']").text("Enter valid 10 digit mobile number");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+
+    function clearValidation(prefix) {
+        $(`#${prefix}PatientForm`).find(".validation-message").text("");
+    }
+
+
+    function openEditModal(id) {
+
+        $.get('/Receptionist/Edit/' + id, function (data) {
+
+            $("#editPatientId").val(data.patientId);
+            $("#editName").val(data.name);
+            $("#editDOB").val(data.dob.split('T')[0]);
+            $("#editGender").val(data.gender);
+            $("#editContact").val(data.contact);
+            $("#editAddress").val(data.address);
+
+            new bootstrap.Modal(document.getElementById('editPatientModal')).show();
+        });
+
+    }
+
+</script>
 }
+
 
