@@ -150,20 +150,26 @@ namespace ClinicManagementSystem.Controllers
             if (patient == null)
                 return NotFound();
 
+            // If AJAX request → return JSON
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(patient);
+
+            // Normal navigation → return View
             return View(patient);
         }
+
 
         // POST: ReceptionistController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Patient patient) 
+        public ActionResult Edit(Patient patient)
         {
             try
             {
                 int? employeeId = HttpContext.Session.GetInt32("EmployeeId");
 
                 if (employeeId == null)
-                    return RedirectToAction("Index","Login");
+                    return Json(new { success = false, message = "Session expired" });
 
                 if (ModelState.IsValid)
                 {
@@ -171,18 +177,31 @@ namespace ClinicManagementSystem.Controllers
 
                     if (rows > 0)
                     {
+                        // AJAX
+                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                            return Json(new { success = true });
+
+                        // Normal page
                         TempData["SuccessMessage"] = "Patient updated successfully!";
                         return RedirectToAction(nameof(Index));
                     }
                 }
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = "Update failed" });
+
                 TempData["ErrorMessage"] = "Update failed!";
                 return View(patient);
             }
             catch
             {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = "Error updating patient" });
+
                 return View(patient);
             }
         }
+
 
         // GET: ReceptionistController/Delete/5
         public ActionResult Delete(int id)
