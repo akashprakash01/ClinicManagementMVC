@@ -2,10 +2,14 @@
 using ClinicManagementSystem.Service;
 using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc.Filters;
+
 
 namespace ClinicManagementSystem.Controllers
 {
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class LabTechnicianController : Controller
     {
         private readonly ILabTechnicianService _service;
@@ -15,6 +19,18 @@ namespace ClinicManagementSystem.Controllers
             _service = service;
         }
 
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            int? roleId = HttpContext.Session.GetInt32("RoleId");
+
+            if (roleId == null || roleId != 4)
+            {
+                context.Result = RedirectToAction("Index", "Login");
+                return;
+            }
+
+            base.OnActionExecuting(context);
+        }
         public IActionResult Index()
         {
             var pending = _service.GetPendingLabTests();
@@ -105,6 +121,22 @@ namespace ClinicManagementSystem.Controllers
 
                 throw;
             }
+
+
+        }
+        public IActionResult PrintLabBill(int id)
+        {
+            var model = _service.GetPrescriptionLabBill(id);
+
+            if (model == null)
+                return NotFound();
+
+            return View("PrintLabBill", model);
+        }
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Login");
         }
 
     }

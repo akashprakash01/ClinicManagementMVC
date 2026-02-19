@@ -166,7 +166,7 @@ select, textarea {
         background: #e68a00;
     }
 
-.btn-secondary {
+/*.btn-secondary {
     background: white;
     color: var(--text-light);
     border: 1px solid var(--border-light);
@@ -175,7 +175,7 @@ select, textarea {
     .btn-secondary:hover {
         background: var(--hover-gray);
         border-color: var(--text-light);
-    }
+    }*/
 
 .btn-sm {
     padding: 6px 12px;

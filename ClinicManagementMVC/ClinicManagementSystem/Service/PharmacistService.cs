@@ -43,6 +43,23 @@ namespace ClinicManagementSystem.Service
                 throw new Exception("Error fetching pending prescriptions: " + ex.Message);
             }
         }
+        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId)
+        {
+            try
+            {
+                if (pharmacyBillId <= 0)
+                    throw new Exception("Bill not created yet.");
+
+                return _repository.AddPharmacyBillItem(
+                    pharmacyBillId,
+                    prescriptionMedicineId,
+                    quantity);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error dispensing medicine: " + ex.Message);
+            }
+        }
 
         public DispenseViewModel GetDispenseViewModel(int prescriptionId)
         {
@@ -335,36 +352,7 @@ namespace ClinicManagementSystem.Service
             }
         }
 
-        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId)
-        {
-            try
-            {
-                //  Check stock
-                if (!_repository.CheckStock(prescriptionMedicineId, quantity))
-                    throw new Exception("Insufficient stock");
-
-                //  Update dispense status
-                bool dispensed = _repository.UpdateDispenseStatus(prescriptionMedicineId, quantity);
-
-                if (!dispensed)
-                    return false;
-
-                //  Reduce stock
-                _repository.ReduceStock(prescriptionMedicineId, quantity);
-
-                //  Attach to bill ONLY if bill already exists
-                if (pharmacyBillId > 0)
-                {
-                    _repository.AddPharmacyBillItem(pharmacyBillId, prescriptionMedicineId, quantity);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error dispensing medicine: " + ex.Message);
-            }
-        }
+       
 
 
 

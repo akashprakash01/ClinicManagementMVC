@@ -4,32 +4,42 @@
     ViewData["Title"] = "Login";
 }
 
-<h2>Login</h2>
-<hr />
+<link rel="stylesheet" href="~/css/Login.css" />
 
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Login" method="post">
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Welcome Back</h2>
+            <p>Please sign in to your account</p>
+        </div>
 
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="login-body">
+            <form asp-action="Login" method="post" id="loginForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger validation-summary-errors"></div>
 
-            <div class="form-group mb-3">
-                <label asp-for="UserName" class="control-label"></label>
-                <input asp-for="UserName" class="form-control" />
-                <span asp-validation-for="UserName" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="UserName" class="control-label">Username</label>
+                    <input asp-for="UserName" class="form-control" placeholder="Enter your username" autocomplete="username" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password" class="control-label">Password</label>
+                    <input asp-for="Password" class="form-control" type="password" placeholder="Enter your password" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn-primary" id="loginButton">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+
+            <div class="login-footer">
+                <a href="@Url.Action("ForgotPassword", "Account")">Forgot your password?</a>
             </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" type="password" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Login" class="btn btn-primary w-100" />
-            </div>
-
-        </form>
+        </div>
     </div>
 </div>
 
@@ -37,4 +47,12 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        // Add loading state to button on form submit
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const button = document.getElementById('loginButton');
+            button.classList.add('loading');
+            button.textContent = '';
+        });
+    </script>
 }
