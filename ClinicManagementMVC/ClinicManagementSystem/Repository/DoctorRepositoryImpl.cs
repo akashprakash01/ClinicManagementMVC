@@ -156,6 +156,8 @@ namespace ClinicManagementSystem.Repository
                     cmd.Parameters.AddWithValue("@dosage", model.Dosage);
                     cmd.Parameters.AddWithValue("@frequency", model.Frequency);
                     cmd.Parameters.AddWithValue("@duration", model.Duration);
+                    cmd.Parameters.AddWithValue("@quantity", model.Quantity);//Error
+
 
                     con.Open();
                     cmd.ExecuteNonQuery();

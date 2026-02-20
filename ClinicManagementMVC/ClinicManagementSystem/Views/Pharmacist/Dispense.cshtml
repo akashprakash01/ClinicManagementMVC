@@ -127,6 +127,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Quantity to Dispense</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control" min="1" max="1" required />
                         <input type="number" id="quantity" name="quantity" class="form-control" required />
                         <small class="text-muted">Max quantity: <span id="maxQuantity"></span></small>
                     </div>
@@ -155,33 +156,48 @@
                 $('#dispenseModal').modal('show');
             });
 
-            $('#dispenseForm').submit(function(e) {
-                e.preventDefault();
+        $('#dispenseForm').submit(function (e) {
+            e.preventDefault();
 
-                var formData = {
-                    prescriptionMedicineId: $('#prescriptionMedicineId').val(),
-                    quantity: $('#quantity').val(),
-                    pharmacyBillId: $('#pharmacyBillId').val()
-                };
+            var qty = parseInt($('#quantity').val());
+            var maxQty = parseInt($('#quantity').attr('max'));
 
-                $.ajax({
-                    url: '@Url.Action("DispenseMedicine", "Pharmacist")',
-                    type: 'POST',
-                    data: JSON.stringify(formData),
-                    contentType: 'application/json',
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Medicine dispensed successfully!');
-                            location.reload();
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred while dispensing medicine.');
+            // 🔒 Frontend validation
+            if (isNaN(qty) || qty <= 0) {
+                alert("Enter a valid quantity");
+                return;
+            }
+
+            if (qty > maxQty) {
+                alert("Quantity cannot exceed prescribed amount");
+                return;
+            }
+
+            var formData = {
+                prescriptionMedicineId: parseInt($('#prescriptionMedicineId').val()),
+                quantity: qty,
+                pharmacyBillId: parseInt($('#pharmacyBillId').val()) || 0
+            };
+
+            $.ajax({
+                url: '@Url.Action("DispenseMedicine", "Pharmacist")',
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.success) {
+                        alert('Medicine dispensed successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
                     }
-                });
+                },
+                error: function () {
+                    alert('An error occurred while dispensing medicine.');
+                }
             });
         });
+
+    });
     </script>
 }

@@ -202,6 +202,9 @@ namespace ClinicManagementSystem.Controllers
         {
             try
             {
+                if (model == null)
+                    return Json(new { success = false, message = "Invalid data received" });
+
                 bool result = _service.DispenseMedicine(
                     model.PrescriptionMedicineId,
                     model.Quantity,
@@ -217,9 +220,43 @@ namespace ClinicManagementSystem.Controllers
 
         // ================= CREATE BILL =================
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult CreatePharmacyBill(int prescriptionId)
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult CreatePharmacyBill(int prescriptionId)
+        //{
+        //    try
+        //    {
+        //        int? empId = HttpContext.Session.GetInt32("EmployeeId");
+
+        //        if (empId == null)
+        //            throw new Exception("Session expired. Please login again.");
+
+        //        var existingBill = _service.GetBillByPrescriptionId(prescriptionId);
+
+        //        int billId;
+        //        if (existingBill != null)
+        //        {
+        //            billId = existingBill.PharmacyBillId;
+        //            TempData["Info"] = "Bill already exists for this prescription.";
+        //        }
+        //        else
+        //        {
+        //            billId = _service.CreatePharmacyBill(prescriptionId, empId.Value);
+        //            TempData["Success"] = "Bill created successfully. Please add medicine items.";
+        //        }
+
+        //        return RedirectToAction("BillScreen", new { prescriptionId, billId });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        TempData["Error"] = ex.Message;
+        //        return RedirectToAction("Index");
+        //    }
+        //}
+
+        // ================= BILL SCREEN (ADD ITEMS) =================
+
+        public IActionResult BillScreen(int prescriptionId)
         {
             try
             {
@@ -228,42 +265,32 @@ namespace ClinicManagementSystem.Controllers
                 if (empId == null)
                     throw new Exception("Session expired. Please login again.");
 
+                // 1️⃣ check existing bill
                 var existingBill = _service.GetBillByPrescriptionId(prescriptionId);
 
                 int billId;
-                if (existingBill != null)
+
+                // 2️⃣ create bill ONLY if not exists
+                if (existingBill == null)
                 {
-                    billId = existingBill.PharmacyBillId;
-                    TempData["Info"] = "Bill already exists for this prescription.";
+                    billId = _service.CreatePharmacyBill(prescriptionId, empId.Value);
                 }
                 else
                 {
-                    billId = _service.CreatePharmacyBill(prescriptionId, empId.Value);
-                    TempData["Success"] = "Bill created successfully. Please add medicine items.";
+                    billId = existingBill.PharmacyBillId;
                 }
 
-                return RedirectToAction("BillScreen", new { prescriptionId, billId });
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = ex.Message;
-                return RedirectToAction("Index");
-            }
-        }
-
-        // ================= BILL SCREEN (ADD ITEMS) =================
-
-        public IActionResult BillScreen(int prescriptionId, int billId)
-        {
-            try
-            {
+                // 3️⃣ load bill screen
                 var vm = _service.GetBillScreenViewModel(prescriptionId, billId);
+
                 if (vm == null)
                 {
                     TempData["Error"] = "Bill not found.";
                     return RedirectToAction("Index");
                 }
+
                 ViewBag.PrescriptionId = prescriptionId;
+
                 return View(vm);
             }
             catch (Exception ex)
@@ -272,6 +299,7 @@ namespace ClinicManagementSystem.Controllers
                 return RedirectToAction("Index");
             }
         }
+
 
         // ================= ADD BILL ITEM =================
 
@@ -291,12 +319,13 @@ namespace ClinicManagementSystem.Controllers
                 else
                     TempData["Error"] = "Failed to add medicine to bill.";
 
-                return RedirectToAction("BillScreen", new { prescriptionId, billId = model.PharmacyBillId });
+                return RedirectToAction("BillScreen", new { prescriptionId });
+
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                return RedirectToAction("BillScreen", new { prescriptionId, billId = model.PharmacyBillId });
+                return RedirectToAction("BillScreen", new { prescriptionId });
             }
         }
 
@@ -314,12 +343,12 @@ namespace ClinicManagementSystem.Controllers
                 else
                     TempData["Error"] = "Failed to remove item.";
 
-                return RedirectToAction("BillScreen", new { prescriptionId, billId = pharmacyBillId });
+                return RedirectToAction("BillScreen", new { prescriptionId });
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                return RedirectToAction("BillScreen", new { prescriptionId, billId = pharmacyBillId });
+                return RedirectToAction("BillScreen", new { prescriptionId });
             }
         }
 
@@ -340,7 +369,7 @@ namespace ClinicManagementSystem.Controllers
                 TempData["Error"] = ex.Message;
             }
 
-            return RedirectToAction("BillScreen", new { prescriptionId, billId });
+            return RedirectToAction("BillScreen", new { prescriptionId });
         }
 
         // ================= GENERATE FINAL BILL =================

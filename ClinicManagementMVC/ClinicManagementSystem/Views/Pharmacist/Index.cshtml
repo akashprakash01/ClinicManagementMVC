@@ -143,38 +143,5 @@
         </div>
     </div>
 
-    <div class="modal fade" id="billModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="CreatePharmacyBill" method="post">
-                    @Html.AntiForgeryToken()
-
-                    <div class="modal-header">
-                        <h5>Create Bill</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <select name="prescriptionId" class="form-control">
-                            @if (Model != null && Model.Any())
-                            {
-                                foreach (var p in Model)
-                                {
-                                    <option value="@p.PrescriptionId">
-                                        @p.PrescriptionId - @p.PatientName
-                                    </option>
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button class="btn btn-success">Create</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 }
 

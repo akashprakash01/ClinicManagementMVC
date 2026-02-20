@@ -218,8 +218,14 @@ namespace ClinicManagementSystem.Service
         {
             try
             {
-                return _repository.CreatePharmacyBill(prescriptionId, createdBy);
+                int billId = _repository.CreatePharmacyBill(prescriptionId, createdBy);
+
+                // ⭐ AUTO ADD DISPENSED MEDICINES
+                _repository.AddDispensedMedicinesToBill(prescriptionId, billId);
+
+                return billId;
             }
+
             catch (Exception ex)
             {
                 throw new Exception("Error creating bill: " + ex.Message);
@@ -230,7 +236,7 @@ namespace ClinicManagementSystem.Service
         {
             try
             {
-                var bill = _repository.GetPharmacyBill(prescriptionId);
+                var bill = _repository.GetPharmacyBill(billId);
                 if (bill == null)
                     return null;
 
@@ -353,6 +359,8 @@ namespace ClinicManagementSystem.Service
         }
 
        
+
+
 
 
 
