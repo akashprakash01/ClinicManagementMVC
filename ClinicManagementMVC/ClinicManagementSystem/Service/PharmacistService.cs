@@ -201,8 +201,14 @@ namespace ClinicManagementSystem.Service
         {
             try
             {
-                return _repository.CreatePharmacyBill(prescriptionId, createdBy);
+                int billId = _repository.CreatePharmacyBill(prescriptionId, createdBy);
+
+                // ⭐ AUTO ADD DISPENSED MEDICINES
+                _repository.AddDispensedMedicinesToBill(prescriptionId, billId);
+
+                return billId;
             }
+
             catch (Exception ex)
             {
                 throw new Exception("Error creating bill: " + ex.Message);
@@ -213,7 +219,7 @@ namespace ClinicManagementSystem.Service
         {
             try
             {
-                var bill = _repository.GetPharmacyBill(prescriptionId);
+                var bill = _repository.GetPharmacyBill(billId);
                 if (bill == null)
                     return null;
 
@@ -339,23 +345,35 @@ namespace ClinicManagementSystem.Service
         {
             try
             {
-                //  Check stock
+                if (quantity <= 0)
+                    throw new Exception("Invalid quantity");
+
+                // 🔒 Check stock
                 if (!_repository.CheckStock(prescriptionMedicineId, quantity))
                     throw new Exception("Insufficient stock");
 
-                //  Update dispense status
+                // 🔹 Reduce stock
+                bool stockReduced = _repository.ReduceStock(prescriptionMedicineId, quantity);
+
+                if (!stockReduced)
+                    throw new Exception("Failed to reduce stock");
+
+                // 🔹 Update dispense status
                 bool dispensed = _repository.UpdateDispenseStatus(prescriptionMedicineId, quantity);
 
                 if (!dispensed)
-                    return false;
+                    throw new Exception("Failed to update dispense status");
 
-                //  Reduce stock
-                _repository.ReduceStock(prescriptionMedicineId, quantity);
-
-                //  Attach to bill ONLY if bill already exists
+                // 🔹 Add to bill ONLY if bill already exists
                 if (pharmacyBillId > 0)
                 {
-                    _repository.AddPharmacyBillItem(pharmacyBillId, prescriptionMedicineId, quantity);
+                    bool billItemAdded = _repository.AddPharmacyBillItem(
+                        pharmacyBillId,
+                        prescriptionMedicineId,
+                        quantity);
+
+                    if (!billItemAdded)
+                        throw new Exception("Failed to add item to bill");
                 }
 
                 return true;
@@ -365,6 +383,8 @@ namespace ClinicManagementSystem.Service
                 throw new Exception("Error dispensing medicine: " + ex.Message);
             }
         }
+
+
 
 
 
