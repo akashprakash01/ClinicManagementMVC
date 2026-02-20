@@ -43,6 +43,23 @@ namespace ClinicManagementSystem.Service
                 throw new Exception("Error fetching pending prescriptions: " + ex.Message);
             }
         }
+        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId)
+        {
+            try
+            {
+                if (pharmacyBillId <= 0)
+                    throw new Exception("Bill not created yet.");
+
+                return _repository.AddPharmacyBillItem(
+                    pharmacyBillId,
+                    prescriptionMedicineId,
+                    quantity);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error dispensing medicine: " + ex.Message);
+            }
+        }
 
         public DispenseViewModel GetDispenseViewModel(int prescriptionId)
         {
@@ -341,48 +358,7 @@ namespace ClinicManagementSystem.Service
             }
         }
 
-        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId)
-        {
-            try
-            {
-                if (quantity <= 0)
-                    throw new Exception("Invalid quantity");
-
-                // 🔒 Check stock
-                if (!_repository.CheckStock(prescriptionMedicineId, quantity))
-                    throw new Exception("Insufficient stock");
-
-                // 🔹 Reduce stock
-                bool stockReduced = _repository.ReduceStock(prescriptionMedicineId, quantity);
-
-                if (!stockReduced)
-                    throw new Exception("Failed to reduce stock");
-
-                // 🔹 Update dispense status
-                bool dispensed = _repository.UpdateDispenseStatus(prescriptionMedicineId, quantity);
-
-                if (!dispensed)
-                    throw new Exception("Failed to update dispense status");
-
-                // 🔹 Add to bill ONLY if bill already exists
-                if (pharmacyBillId > 0)
-                {
-                    bool billItemAdded = _repository.AddPharmacyBillItem(
-                        pharmacyBillId,
-                        prescriptionMedicineId,
-                        quantity);
-
-                    if (!billItemAdded)
-                        throw new Exception("Failed to add item to bill");
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error dispensing medicine: " + ex.Message);
-            }
-        }
+       
 
 
 

@@ -1,10 +1,38 @@
 ﻿@model ClinicManagementSystem.Models.PrescriptionLabBillVM
 
 @{
-    Layout = "~/Views/Shared/CommonLayout.cshtml";
+    Layout = "~/Views/Shared/LabtechnicianNav.cshtml";
 }
 
-<div class="container mt-5">
+<style>
+    @@media print {
+
+        body * {
+            visibility: hidden;
+        }
+
+        #printArea, #printArea * {
+            visibility: visible;
+        }
+
+        #printArea {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .no-print {
+            display: none;
+        }
+
+        .navbar, header {
+            display: none !important;
+        }
+    }
+</style>
+
+<div id="printArea" class="container mt-5">
     <div class="card shadow p-4">
 
         <h2 class="text-primary text-center">Lab Report & Bill</h2>
@@ -36,11 +64,11 @@
             <h4>Total: ₹ @Model.GrandTotal</h4>
         </div>
 
-        <div class="text-center mt-4">
-            <button onclick="window.print()" class="btn btn-dark">
-                Print Bill
-            </button>
-        </div>
-
     </div>
+</div>
+
+<div class="text-center mt-3 no-print">
+    <button onclick="window.print()" class="btn btn-dark">
+        Print Bill
+    </button>
 </div>

@@ -3,12 +3,15 @@ using ClinicManagementSystem.Service;
 using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace ClinicManagementSystem.Controllers
 {
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+
     public class ReceptionistController : Controller
     {
         // Field
@@ -18,6 +21,19 @@ namespace ClinicManagementSystem.Controllers
         public ReceptionistController(IReceptionistService receptionistService)
         {
             _receptionistService = receptionistService;
+        }
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            int? roleId = HttpContext.Session.GetInt32("RoleId");
+
+            if (roleId == null || roleId != 1)   // 1 = Receptionist
+            {
+                context.Result = RedirectToAction("Index", "Login");
+                return;
+            }
+
+            base.OnActionExecuting(context);
         }
 
         // GET: ReceptionistController
@@ -273,6 +289,12 @@ namespace ClinicManagementSystem.Controllers
         {
             var bill = _receptionistService.GetBillById(id);
             return Json(bill);
+        }
+
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Login");
         }
 
 

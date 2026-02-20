@@ -2,9 +2,13 @@
 using ClinicManagementSystem.Service;
 using ClinicManagementSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+
 
 namespace ClinicManagementSystem.Controllers
 {
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class DoctorController : Controller
     {
         private readonly IDoctorService _doctorService;
@@ -12,6 +16,18 @@ namespace ClinicManagementSystem.Controllers
         public DoctorController(IDoctorService doctorService)
         {
             _doctorService = doctorService;
+        }
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            int? roleId = HttpContext.Session.GetInt32("RoleId");
+
+            if (roleId == null || roleId != 2)   // 2 = Doctor
+            {
+                context.Result = RedirectToAction("Index", "Login");
+                return;
+            }
+
+            base.OnActionExecuting(context);
         }
 
         // ===============================
@@ -23,8 +39,6 @@ namespace ClinicManagementSystem.Controllers
 
             if (doctorId == null)
                 return RedirectToAction("Index", "Login");
-
-            ViewBag.DoctorId = doctorId;
 
             var appointments = _doctorService
                 .GetDoctorAppointmentsToday(doctorId.Value);
