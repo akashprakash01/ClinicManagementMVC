@@ -90,8 +90,6 @@ namespace ClinicManagementSystem.Repository
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@PrescriptionLabTestId", model.PrescriptionLabTestId);
-                    cmd.Parameters.AddWithValue("@TotalAmount", model.TotalAmount);
-
                     cmd.Parameters.AddWithValue("@Result", model.Result ?? "");
 
                     con.Open();
@@ -99,7 +97,6 @@ namespace ClinicManagementSystem.Repository
                 }
             }
         }
-
         public LabTestResultVM GetLabTestDetailsForResult(int prescriptionLabTestId)
         {
             LabTestResultVM model = new();

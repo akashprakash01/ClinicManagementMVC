@@ -40,6 +40,7 @@ namespace ClinicManagementSystem.Controllers
             if (doctorId == null)
                 return RedirectToAction("Index", "Login");
 
+            ViewBag.DoctorId = doctorId.Value;   
             var appointments = _doctorService
                 .GetDoctorAppointmentsToday(doctorId.Value);
 
@@ -47,11 +48,14 @@ namespace ClinicManagementSystem.Controllers
         }
 
         [HttpPost]
-        [HttpPost]
         public IActionResult AddPrescription(AddPrescriptionVM model)
         {
+            //if (!ModelState.IsValid)
+            //    return RedirectToAction("Index");
             if (!ModelState.IsValid)
-                return RedirectToAction("Index");
+            {
+                return BadRequest(ModelState); 
+            }
 
             int prescriptionId = _doctorService.AddPrescription(model);
 

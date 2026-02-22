@@ -3,120 +3,134 @@
     Layout = "~/Views/Shared/ReceptionistNav.cshtml";
 }
 
-@* <div class="container">
-    <div class="card">
-        <h2>Appointments</h2>
-        <!-- Your existing content here -->
+<div class="container-fluid px-2 px-md-3">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+        <h2 class="mb-2 mb-md-0 text-center text-md-start">Appointments</h2>
     </div>
-</div> *@
 
-<h2>Appointments</h2>
+    <form method="get" asp-action="ViewAppointments">
+        <div class="row g-2 mb-3">
 
-<form method="get" asp-action="ViewAppointments">
-    <div class="row mb-3">
+            <div class="col-12 col-md-4 col-lg-3">
+                <label class="form-label">Doctor</label>
+                <select name="doctorId" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var doc in ViewBag.Doctors)
+                    {
+                        <option value="@doc.DoctorId"
+                                selected="@(Context.Request.Query["doctorId"] == doc.DoctorId.ToString())">
+                            @doc.DoctorName
+                        </option>
+                    }
+                </select>
+            </div>
 
-        <div class="col-md-3">
-            <label>Doctor</label>
-            <select name="doctorId" class="form-control">
-                <option value="">All</option>
-                @foreach (var doc in ViewBag.Doctors)
+            <div class="col-12 col-md-4 col-lg-3">
+                <label class="form-label">Date</label>
+                <input type="date"
+                       name="appointmentDate"
+                       value="@Context.Request.Query["appointmentDate"]"
+                       class="form-control" />
+            </div>
+
+            <div class="col-12 col-md-4 col-lg-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    Search
+                </button>
+
+                <a asp-action="ViewAppointments"
+                   class="btn btn-secondary w-100">
+                    Reset
+                </a>
+            </div>
+
+        </div>
+    </form>
+
+
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Token</th>
+                    <th>Patient</th>
+                    <th class="d-none d-md-table-cell">Doctor</th>
+                    <th class="d-none d-lg-table-cell">Specialization</th>
+                    <th>Date</th>
+                    <th class="d-none d-md-table-cell">Time</th>
+                    <th>Status</th>
+                    <th>Bill</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model)
                 {
-                    <option value="@doc.DoctorId"
-                            selected="@(Context.Request.Query["doctorId"] == doc.DoctorId.ToString())">
-                        @doc.DoctorName
-                    </option>
+                    <tr>
+                        <td>@item.Token</td>
+                        <td class="fw-semibold">@item.PatientName</td>
+
+                        <td class="d-none d-md-table-cell">
+                            @item.DoctorName
+                        </td>
+
+                        <td class="d-none d-lg-table-cell">
+                            @item.SpecializationName
+                        </td>
+
+                        <td>
+                            @item.AppointmentDate.ToShortDateString()
+                        </td>
+
+                        <td class="d-none d-md-table-cell">
+                            @item.AppointmentDate.ToShortTimeString()
+                            -
+                            @item.AppointmentEndTime.ToShortTimeString()
+                        </td>
+
+                        <td>
+                            @if (item.AppointmentStatus == "Completed")
+                            {
+                                <span class="badge bg-success">Completed</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            }
+                        </td>
+
+                        <td>
+                            <div class="d-grid d-md-flex gap-1 justify-content-md-center">
+                                @if (item.IsBillGenerated)
+                                {
+                                    <button class="btn btn-primary btn-sm w-100 w-md-auto"
+                                            onclick="viewBill(@item.PatientBillId)">
+                                        View
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-success btn-sm w-100 w-md-auto"
+                                            onclick="generateBill(@item.AppointmentId)">
+                                        Generate
+                                    </button>
+                                }
+                            </div>
+                        </td>
+
+                    </tr>
                 }
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <label>Date</label>
-            <input type="date"
-                   name="appointmentDate"
-                   value="@Context.Request.Query["appointmentDate"]"
-                   class="form-control" />
-        </div>
-
-        <div class="col-md-3 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary">Search</button>
-
-            <a asp-action="ViewAppointments" class="btn btn-secondary ms-2">
-                Reset
-            </a>
-        </div>
-
+            </tbody>
+        </table>
     </div>
-</form>
-
-
-
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Token</th>
-            <th>Patient</th>
-            <th>Doctor</th>
-            <th>Specialization</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Appointment Status</th>
-            <th>Bill</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Token</td>
-                <td>@item.PatientName</td>
-                <td>@item.DoctorName</td>
-                <td>@item.SpecializationName</td>
-                <td>@item.AppointmentDate.ToShortDateString()</td>
-                <td>
-                    @item.AppointmentDate.ToShortTimeString()
-                    -
-                    @item.AppointmentEndTime.ToShortTimeString()
-                </td>
-
-                <td>
-                    @if (item.AppointmentStatus == "Completed")
-                    {
-                        <span class="badge bg-success">Completed</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark">Pending</span>
-                    }
-                </td>
-
-                <td>
-                    @* BILL ALREADY GENERATED *@
-                    @if (item.IsBillGenerated)
-                    {
-                        <button class="btn btn-primary btn-sm"
-                                onclick="viewBill(@item.PatientBillId)">
-                            View Bill
-                        </button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-success btn-sm"
-                                onclick="generateBill(@item.AppointmentId)">
-                            Generate Bill
-                        </button>
-                    }
-                </td>
-
-            </tr>
-        }
-    </tbody>
-</table>
+</div>
 
 @Html.AntiForgeryToken()
 
 <!-- BILL MODAL -->
-<div class="modal fade" id="billModal">
+<div class="modal-dialog modal-fullscreen-sm-down modal-lg modal-dialog-centered">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" id="billContent">
 
