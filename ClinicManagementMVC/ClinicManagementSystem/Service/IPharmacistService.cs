@@ -6,7 +6,7 @@ namespace ClinicManagementSystem.Service
     public interface IPharmacistService
     {
         // Prescription methods
-        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId);
+        public bool DispenseMedicine(int prescriptionMedicineId, int quantity);
 
         List<PendingPrescriptionVM> GetPendingPrescriptions();
         DispenseViewModel GetDispenseViewModel(int prescriptionId);

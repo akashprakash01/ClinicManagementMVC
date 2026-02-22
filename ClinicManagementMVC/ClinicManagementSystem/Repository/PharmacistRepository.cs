@@ -28,9 +28,7 @@ namespace ClinicManagementSystem.Repository
                 SELECT DISTINCT 
                     p.prescriptionId,
                     p.createdAt AS prescriptionDate,
-
                     pt.name AS PatientName,
-    
                     CONCAT(ep.firstName, ' ', ep.lastName) AS DoctorName
 
                 FROM Prescription p
@@ -47,10 +45,12 @@ namespace ClinicManagementSystem.Repository
                 INNER JOIN EmployeeProfile ep
                     ON d.employeeId = ep.employeeId
 
-                LEFT JOIN PharmacyBill pb
-                    ON pb.PrescriptionId = p.prescriptionId
-
-                WHERE pb.PrescriptionId IS NULL
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM PrescriptionMedicines pm
+                    WHERE pm.prescriptionId = p.prescriptionId
+                    AND pm.Status = 1
+                )
 
                 ORDER BY p.createdAt DESC", con);
 
@@ -138,11 +138,11 @@ namespace ClinicManagementSystem.Repository
             using (SqlConnection con = ConnectionManager.OpenConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand(@"
-                    SELECT pm.*, m.MedicineName, m.Price
-                    FROM PrescriptionMedicines pm
-                    INNER JOIN Medicines m ON pm.medicineId = m.MedicineId
-                    WHERE pm.prescriptionId = @PrescriptionId
-                    ORDER BY pm.status DESC, pm.PrescriptionMedicineId", con);
+            SELECT pm.*, m.MedicineName, m.Price
+            FROM PrescriptionMedicines pm
+            INNER JOIN Medicines m ON pm.medicineId = m.MedicineId
+            WHERE pm.prescriptionId = @PrescriptionId
+            ORDER BY pm.status DESC, pm.PrescriptionMedicineId", con);
 
                 cmd.Parameters.AddWithValue("@PrescriptionId", prescriptionId);
 
@@ -150,7 +150,7 @@ namespace ClinicManagementSystem.Repository
 
                 while (rdr.Read())
                 {
-                    PrescriptionMedicine medicine = new PrescriptionMedicine
+                    medicines.Add(new PrescriptionMedicine
                     {
                         PrescriptionMedicineId = Convert.ToInt32(rdr["PrescriptionMedicineId"]),
                         PrescriptionId = Convert.ToInt32(rdr["prescriptionId"]),
@@ -161,23 +161,25 @@ namespace ClinicManagementSystem.Repository
                         Frequency = rdr["frequency"]?.ToString(),
                         Duration = rdr["duration"]?.ToString(),
 
-                        Quantity = 1, // ← FIXED
+                        // ✅ REAL QUANTITY
+                        Quantity = rdr["quantity"] != DBNull.Value
+                            ? Convert.ToInt32(rdr["quantity"])
+                            : 0,
 
                         Price = rdr["Price"] != DBNull.Value
-            ? Convert.ToDecimal(rdr["Price"])
-            : 0,
+                            ? Convert.ToDecimal(rdr["Price"])
+                            : 0,
 
                         Status = rdr["status"] != DBNull.Value
-            ? Convert.ToInt32(rdr["status"])
-            : 0
-                    };
-
-                    medicines.Add(medicine);
+                            ? Convert.ToInt32(rdr["status"])
+                            : 0
+                    });
                 }
             }
 
             return medicines;
         }
+
 
         public IEnumerable<Medicine> GetAvailableMedicinesForPrescription(int prescriptionId)
         {
@@ -544,10 +546,21 @@ namespace ClinicManagementSystem.Repository
             using (SqlConnection con = ConnectionManager.OpenConnection(_connectionString))
             {
                 SqlCommand cmd = new SqlCommand(@"
-                    SELECT pbi.*, m.MedicineName, pm.dosage, pm.frequency
+                    SELECT 
+                        pbi.PharmacyBillItemId,
+                        pbi.PharmacyBillId,
+                        pbi.PrescriptionMedicineId,
+                        pbi.Quantity,
+                        pbi.UnitPrice,
+                        pbi.SubTotal,
+                        ISNULL(m.MedicineName,'') AS MedicineName,
+                        ISNULL(pm.dosage,'') AS dosage,
+                        ISNULL(pm.frequency,'') AS frequency
                     FROM PharmacyBillItems pbi
-                    INNER JOIN PrescriptionMedicines pm ON pbi.PrescriptionMedicineId = pm.PrescriptionMedicineId
-                    INNER JOIN Medicines m ON pm.medicineId = m.MedicineId
+                    LEFT JOIN PrescriptionMedicines pm 
+                        ON pbi.PrescriptionMedicineId = pm.PrescriptionMedicineId
+                    LEFT JOIN Medicines m 
+                        ON pm.MedicineId = m.MedicineId
                     WHERE pbi.PharmacyBillId = @PharmacyBillId", con);
 
                 cmd.Parameters.AddWithValue("@PharmacyBillId", pharmacyBillId);
@@ -565,7 +578,7 @@ namespace ClinicManagementSystem.Repository
                         UnitPrice = Convert.ToDecimal(rdr["UnitPrice"]),
                         MedicineName = rdr["MedicineName"].ToString(),
                         Dosage = rdr["dosage"].ToString(),
-                        Frequency = rdr["frequency"].ToString()
+                        Frequency = rdr["frequency"].ToString(),
                     };
                     items.Add(item);
                 }
@@ -582,8 +595,8 @@ namespace ClinicManagementSystem.Repository
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@PharmacyBillId", pharmacyBillId);
 
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
+                cmd.ExecuteNonQuery();
+                return true;
             }
         }
 
@@ -644,6 +657,33 @@ namespace ClinicManagementSystem.Repository
 
             return cmd.ExecuteNonQuery() > 0;
         }
+
+        public bool AddDispensedMedicinesToBill(int prescriptionId, int billId)
+        {
+            using SqlConnection con = ConnectionManager.OpenConnection(_connectionString);
+
+            SqlCommand cmd = new SqlCommand(@"
+        INSERT INTO PharmacyBillItems
+        (PharmacyBillId, PrescriptionMedicineId, Quantity, UnitPrice)
+
+        SELECT 
+            @BillId,
+            pm.PrescriptionMedicineId,
+            pm.Quantity,
+            m.Price
+
+        FROM PrescriptionMedicines pm
+        INNER JOIN Medicines m ON pm.MedicineId = m.MedicineId
+        WHERE pm.PrescriptionId = @PrescriptionId
+        AND pm.Status = 0   -- ONLY DISPENSED
+    ", con);
+
+            cmd.Parameters.AddWithValue("@BillId", billId);
+            cmd.Parameters.AddWithValue("@PrescriptionId", prescriptionId);
+
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
 
 
     }

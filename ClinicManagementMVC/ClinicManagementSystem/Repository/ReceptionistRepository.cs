@@ -610,6 +610,7 @@ namespace ClinicManagementSystem.Repository
 
         #endregion
 
+        #region
         public List<DoctorDropdownVM> GetDoctors()
         {
             List<DoctorDropdownVM> list = new();
@@ -638,7 +639,7 @@ namespace ClinicManagementSystem.Repository
 
             return list;
         }
-
+        #endregion
 
     }
 }

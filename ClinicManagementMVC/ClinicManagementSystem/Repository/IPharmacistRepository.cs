@@ -37,6 +37,8 @@ namespace ClinicManagementSystem.Repository
         bool UpdateDispenseStatus(int prescriptionMedicineId, int quantity);
         bool ReduceStock(int prescriptionMedicineId, int quantity);
 
+        public bool AddDispensedMedicinesToBill(int prescriptionId, int billId);
+
     }
 
 }

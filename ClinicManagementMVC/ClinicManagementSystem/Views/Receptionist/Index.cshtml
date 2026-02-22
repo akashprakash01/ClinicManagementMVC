@@ -222,7 +222,7 @@
 
             <div class="modal-body">
 
-                <form id="editPatientForm">
+                <form id="editPatientForm" novalidate>
                     @Html.AntiForgeryToken()
 
                     <input type="hidden" id="editPatientId" name="PatientId" />
@@ -230,11 +230,13 @@
                     <div class="mb-2">
                         <label>Name</label>
                         <input id="editName" name="Name" class="form-control" />
+                        <span class="text-danger validation-message" data-valmsg-for="Name"></span>
                     </div>
 
                     <div class="mb-2">
                         <label>DOB</label>
                         <input type="date" id="editDOB" name="DOB" class="form-control" />
+                        <span class="text-danger validation-message" data-valmsg-for="DOB"></span>
                     </div>
 
                     <div class="mb-2">
@@ -244,11 +246,13 @@
                             <option>Male</option>
                             <option>Female</option>
                         </select>
+                        <span class="text-danger validation-message" data-valmsg-for="Gender"></span>
                     </div>
 
                     <div class="mb-2">
                         <label>Contact</label>
                         <input id="editContact" name="Contact" class="form-control" />
+                        <span class="text-danger validation-message" data-valmsg-for="Contact"></span>
                     </div>
 
                     <div class="mb-2">
@@ -325,6 +329,8 @@
 
             e.preventDefault();
 
+            if (!validatePatientForm("edit")) return;
+
             $.ajax({
                 url: '/Receptionist/Edit',
                 type: 'POST',
@@ -377,6 +383,10 @@
         // ---------------- REAL-TIME VALIDATION ----------------
         $("#addName, #addDOB, #addGender, #addContact").on("input change", function () {
             validatePatientForm("add");
+        });
+
+        $("#editName, #editDOB, #editGender, #editContact").on("input change", function () {
+            validatePatientForm("edit");
         });
 
     });
@@ -532,6 +542,7 @@
 
 
     function openEditModal(id) {
+        clearValidation("edit");
 
         $.get('/Receptionist/Edit/' + id, function (data) {
 
