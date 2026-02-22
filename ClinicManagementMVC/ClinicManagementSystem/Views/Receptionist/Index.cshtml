@@ -3,84 +3,98 @@
     Layout = "~/Views/Shared/ReceptionistNav.cshtml";
 }
 
-<h2>Patients List</h2>
+<div class="container-fluid px-2 px-md-3">
 
-<div class="mb-3 text-end">
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPatientModal">
-        <i class="fas fa-user-plus"></i> Add Patient
-    </button>
-</div>
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+        <h2 class="mb-0 text-center text-md-start">Patients List</h2>
 
-@*========================= Search box ====================*@
+        <button class="btn btn-primary w-100 w-md-auto"
+                data-bs-toggle="modal"
+                data-bs-target="#addPatientModal">
+            <i class="fas fa-user-plus"></i> Add Patient
+        </button>
+    </div>
 
-<div class="row mb-3">
-    <div class="col-md-4">
-        <div class="input-group">
-
-            <input type="text"
-                   id="searchBox"
-                   class="form-control"
-                   placeholder="Search by Patient ID / Name / Contact" />
-
-            <button class="btn btn-outline-secondary"
-                    type="button"
-                    id="clearSearch">
-                Clear
-            </button>
-
+    <!-- ================= SEARCH ================= -->
+    <div class="row mb-3">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="input-group">
+                <input type="text"
+                       id="searchBox"
+                       class="form-control"
+                       placeholder="Search by ID / Name / Contact" />
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        id="clearSearch">
+                    Clear
+                </button>
+            </div>
         </div>
     </div>
+
+    <!-- ================= TABLE ================= -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th class="text-nowrap">MMR No</th>
+                    <th>Name</th>
+                    <th class="d-none d-md-table-cell">DOB</th>
+                    <th class="d-none d-md-table-cell">Gender</th>
+                    <th>Contact</th>
+                    <th class="d-none d-lg-table-cell">Address</th>
+                    <th>Appointment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="patientTable">
+                @foreach (var patient in Model)
+                {
+                    <tr>
+                        <td>@patient.PatientId</td>
+                        <td class="fw-semibold">@patient.Name</td>
+                        <td class="d-none d-md-table-cell">
+                            @patient.DOB.ToShortDateString()
+                        </td>
+                        <td class="d-none d-md-table-cell">
+                            @patient.Gender
+                        </td>
+                        <td>@patient.Contact</td>
+                        <td class="d-none d-lg-table-cell">
+                            @patient.Address
+                        </td>
+
+                        <!-- Appointment Buttons -->
+                        <td>
+                            <div class="d-grid d-md-flex gap-1 justify-content-md-center">
+                                <button class="btn btn-success btn-sm w-100 w-md-auto"
+                                        onclick="openAppointmentModal(@patient.PatientId,0)">
+                                    Today
+                                </button>
+
+                                <button class="btn btn-warning btn-sm w-100 w-md-auto"
+                                        onclick="openAppointmentModal(@patient.PatientId,1)">
+                                    Tomorrow
+                                </button>
+                            </div>
+                        </td>
+
+                        <!-- Edit Button -->
+                        <td>
+                            <button class="btn btn-primary btn-sm w-100 w-md-auto"
+                                    onclick="openEditModal(@patient.PatientId)">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
 </div>
-
-@*========================= Available Patients List ====================*@
-
-<table class="table table-bordered table-striped">
-    <thead class="">
-        <tr>
-            <th>MMR No</th>
-            <th>Name</th>
-            <th>DOB</th>
-            <th>Gender</th>
-            <th>Contact</th>
-            <th>Address</th>
-            <th>Book Appointment</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-
-    <tbody id="patientTable">
-        @foreach (var patient in Model)
-        {
-            <tr>
-                <td>@patient.PatientId</td>
-                <td>@patient.Name</td>
-                <td>@patient.DOB.ToShortDateString()</td>
-                <td>@patient.Gender</td>
-                <td>@patient.Contact</td>
-                <td>@patient.Address</td>
-
-                <td>
-                    <button class="btn btn-success btn-sm"
-                            onclick="openAppointmentModal(@patient.PatientId,0)">
-                        Today
-                    </button>
-
-                    <button class="btn btn-warning btn-sm"
-                            onclick="openAppointmentModal(@patient.PatientId,1)">
-                        Tomorrow
-                    </button>
-                </td>
-
-                <td>
-                    <button class="btn btn-primary btn-sm"
-                            onclick="openEditModal(@patient.PatientId)">
-                        Edit
-                    </button>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
 
 @*========================= Add Patient modal form ====================*@
 

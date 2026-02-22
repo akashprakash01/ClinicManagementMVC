@@ -32,29 +32,21 @@
                 <!-- LEFT SIDE -->
                 <div>
                     <a class="btn btn-light me-2"
-                       asp-controller="Pharmacist"
+                       asp-controller="LabTechnician"
                        asp-action="Index">
-                        Pending Prescriptions
+                        Pending Labtest
+                    </a>
+
+                    <a class="btn btn-light me-2"
+                       asp-controller="LabTechnician"
+                       asp-action="AddLabTest">
+                        Add Labtest
                     </a>
                     
 
-                    <a class="btn btn-light me-2"
-                       asp-controller="Pharmacist"
-                       asp-action="MedicineTypeList">
-                        Medicine Type List
-                    </a>
+                   
 
-                    <a class="btn btn-light me-2"
-                       asp-controller="Pharmacist"
-                       asp-action="ViewMedicines">
-                        Medicine List
-                    </a>
-
-                    <button class="btn btn-light me-2"
-                            data-bs-toggle="modal"
-                            data-bs-target="#billModal">
-                        Create Bill
-                    </button>
+                    
 
                     
 

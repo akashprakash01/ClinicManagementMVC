@@ -75,11 +75,12 @@
     </div>
 
     <!-- ===================== COMPLETED LAB TESTS ===================== -->
-
     <div class="card shadow-lg">
         <div class="card-body">
 
-            <h4 class="text-success">Completed Lab Tests</h4>
+            <h4 class="text-success text-center text-md-start">
+                Completed Lab Tests
+            </h4>
             <hr />
 
             @{
@@ -89,37 +90,51 @@
             @if (completedList != null && completedList.Count > 0)
             {
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped text-center align-middle">
-                        <thead class="table-success">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-success text-center">
                             <tr>
-                                <th>Patient</th>
-                                <th>Lab Test</th>
-                                <th>Amount</th>
-                                <th>Result</th>
-                                <th>Action</th>
+                                <th class="text-nowrap">Patient</th>
+                                <th class="text-nowrap">Lab Test</th>
+                                <th class="text-nowrap">Amount</th>
+                                <th class="text-nowrap">Result</th>
+                                <th class="text-nowrap">Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @foreach (var item in completedList)
                             {
-                                <tr>
-                                    <td>@item.PatientName</td>
-                                    <td>@item.LabTestName</td>
-                                    <td>₹ @item.TotalAmount</td>
-                                    <td>@item.Result</td>
-                                    <td>
-                                        <a asp-action="ViewBill"
-                                           asp-route-id="@item.PrescriptionId"
-                                           class="btn btn-info btn-sm me-1">
-                                            View Bill
-                                        </a>
+                                <tr class="text-center text-md-start">
+                                    <td class="fw-semibold">
+                                        @item.PatientName
+                                    </td>
 
-                                        <a asp-action="EditResult"
-                                           asp-route-id="@item.LabTestResultId"
-                                           class="btn btn-warning btn-sm">
-                                            Edit
-                                        </a>
+                                    <td>
+                                        @item.LabTestName
+                                    </td>
+
+                                    <td class="text-md-end text-success fw-bold">
+                                        ₹ @item.TotalAmount
+                                    </td>
+
+                                    <td>
+                                        @item.Result
+                                    </td>
+
+                                    <td>
+                                        <div class="d-grid d-md-flex gap-2 justify-content-md-center">
+                                            <a asp-action="ViewBill"
+                                               asp-route-id="@item.PrescriptionId"
+                                               class="btn btn-info btn-sm w-100 w-md-auto">
+                                                View Bill
+                                            </a>
+
+                                            <a asp-action="EditResult"
+                                               asp-route-id="@item.LabTestResultId"
+                                               class="btn btn-warning btn-sm w-100 w-md-auto">
+                                                Edit
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             }
