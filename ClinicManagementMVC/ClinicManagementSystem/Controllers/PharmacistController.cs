@@ -207,8 +207,7 @@ namespace ClinicManagementSystem.Controllers
 
                 bool result = _service.DispenseMedicine(
                     model.PrescriptionMedicineId,
-                    model.Quantity,
-                    model.PharmacyBillId);
+                    model.Quantity);
 
                 return Json(new { success = result, message = result ? "Medicine dispensed successfully" : "Failed to dispense medicine" });
             }

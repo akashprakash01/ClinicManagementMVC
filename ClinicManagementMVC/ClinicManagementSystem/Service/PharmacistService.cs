@@ -43,17 +43,29 @@ namespace ClinicManagementSystem.Service
                 throw new Exception("Error fetching pending prescriptions: " + ex.Message);
             }
         }
-        public bool DispenseMedicine(int prescriptionMedicineId, int quantity, int pharmacyBillId)
+        public bool DispenseMedicine(int prescriptionMedicineId, int quantity)
         {
             try
             {
-                if (pharmacyBillId <= 0)
-                    throw new Exception("Bill not created yet.");
+                // 1️⃣ Check stock
+                bool hasStock = _repository.CheckStock(prescriptionMedicineId, quantity);
 
-                return _repository.AddPharmacyBillItem(
-                    pharmacyBillId,
-                    prescriptionMedicineId,
-                    quantity);
+                if (!hasStock)
+                    throw new Exception("Insufficient stock");
+
+                // 2️⃣ Reduce stock
+                bool stockReduced = _repository.ReduceStock(prescriptionMedicineId, quantity);
+
+                if (!stockReduced)
+                    throw new Exception("Stock update failed");
+
+                // 3️⃣ Update status → Dispensed
+                bool statusUpdated = _repository.UpdateDispenseStatus(prescriptionMedicineId, quantity);
+
+                if (!statusUpdated)
+                    throw new Exception("Status update failed");
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -236,7 +248,7 @@ namespace ClinicManagementSystem.Service
         {
             try
             {
-                var bill = _repository.GetPharmacyBill(billId);
+                var bill = _repository.GetPharmacyBillById(billId);
                 if (bill == null)
                     return null;
 
