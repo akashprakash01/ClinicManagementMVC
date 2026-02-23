@@ -42,14 +42,14 @@
                 </a>
             }
 
-            @if (Model.BillItems.Any())
+            @* @if (Model.BillItems.Any())
             {
                 <a asp-action="GenerateBill"
                    asp-route-billId="@Model.Bill.PharmacyBillId"
                    class="btn btn-info">
                     <i class="fas fa-file-invoice"></i> View Final Bill
                 </a>
-            }
+            } *@
 
             @if (Model.Bill.PaymentStatus == 1)
             {
