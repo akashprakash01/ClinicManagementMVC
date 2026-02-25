@@ -17,40 +17,38 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <thead class="table-dark">
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Type Name</th>
+                        <th>Created Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
                             <tr>
-                                <th>ID</th>
-                                <th>Type Name</th>
-                                <th>Created Date</th>
+                                <td>@item.MedicineTypeId</td>
+                                <td>@item.TypeName</td>
+                                <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model != null && Model.Any())
-                            {
-                                foreach (var item in Model)
-                                {
-                                    <tr>
-                                        <td>@item.MedicineTypeId</td>
-                                        <td>@item.TypeName</td>
-                                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">No medicine types found</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">
+                                No medicine types found
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -63,19 +61,113 @@
                 <h5 class="modal-title">Add Medicine Type</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="AddMedicineType" method="post">
+
+            <form asp-action="AddMedicineType" method="post" id="typeForm">
                 @Html.AntiForgeryToken()
+
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Type Name</label>
-                        <input name="TypeName" class="form-control" required />
+
+                        <input id="typeName"
+                               name="TypeName"
+                               class="form-control"
+                               placeholder="Enter medicine type"
+                               required />
+
+                        <small id="typeNameError" class="text-danger"></small>
                     </div>
                 </div>
+
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-success">
+                        Save
+                    </button>
                 </div>
+
             </form>
         </div>
     </div>
 </div>
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+@section Scripts {
+
+    <script>
+
+        // ==============================
+        // ✅ MEDICINE TYPE VALIDATION
+        // ==============================
+
+        var typePattern = /^[A-Za-z]+$/;
+
+        function validateTypeName() {
+
+            var value = $("#typeName").val().trim();
+            var errorMessage = "";
+
+            if (!value) {
+                errorMessage = "Type name is required.";
+            }
+            else if (value.length < 3) {
+                errorMessage = "Type name must be at least 3 characters.";
+            }
+            else if (!typePattern.test(value)) {
+                errorMessage = "Only letters allowed and must start with a letter.";
+            }
+
+            $("#typeNameError").text(errorMessage);
+
+            return errorMessage === "";
+        }
+
+        // Validate on blur
+        $("#typeName").on("blur", function () {
+            validateTypeName();
+        });
+
+        // Prevent space as first character
+        $("#typeName").on("keydown", function (e) {
+            if (e.key === " " && $(this).val().length === 0) {
+                e.preventDefault();
+                $("#typeNameError").text("Type name cannot start with space.");
+            }
+        });
+
+        // Real-time clear error
+        $("#typeName").on("keyup", function () {
+            if ($("#typeNameError").text() !== "" &&
+                /^[A-Za-z]/.test($(this).val())) {
+                $("#typeNameError").text("");
+            }
+        });
+
+        // Prevent form submission if invalid
+        $("#typeForm").on("submit", function (e) {
+
+            if (!validateTypeName()) {
+                e.preventDefault();
+            }
+
+        });
+
+        // Reset modal when closed
+        $('#addTypeModal').on('hidden.bs.modal', function () {
+
+            $("#typeName").val("");
+            $("#typeNameError").text("");
+
+        });
+
+    </script>
+
+}

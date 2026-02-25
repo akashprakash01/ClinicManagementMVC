@@ -9,7 +9,7 @@
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
@@ -17,7 +17,7 @@
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
@@ -28,120 +28,205 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <table class="table table-bordered table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Prescription ID</th>
-                                <th>Patient Name</th>
-                                <th>Doctor Name</th>
-                                <th>Date</th>
-                                <th>Pending Medicines</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model != null && Model.Any())
-                            {
-                                foreach (var item in Model)
-                                {
-                                    <tr>
-                                        <td>@item.PrescriptionId</td>
-                                        <td>@item.PatientName</td>
-                                        <td>@item.DoctorName</td>
-                                        <td>@item.PrescriptionDate.ToString("dd/MM/yyyy")</td>
-                                        <td>
-                                            <span class="badge bg-danger">
-                                                @item.PendingCount
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a asp-action="Dispense"
-                                               asp-route-prescriptionId="@item.PrescriptionId"
-                                               class="btn btn-primary btn-sm">
-                                                <i class="fas fa-pills"></i> Dispense
-                                            </a>
+    <div class="card shadow-sm">
+        <div class="card-body">
 
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        No pending prescriptions found
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+            <!-- 🔍 Search -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="searchInput"
+                               class="form-control"
+                               placeholder="Search by ID, Patient, Doctor or Date..." />
+                    </div>
                 </div>
             </div>
+
+            <table id="prescriptionTable" class="table table-bordered table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Prescription ID</th>
+                        <th>Patient Name</th>
+                        <th>Doctor Name</th>
+                        <th>Date</th>
+                        <th>Pending Medicines</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.PrescriptionId</td>
+                                <td>@item.PatientName</td>
+                                <td>@item.DoctorName</td>
+                                <td>@item.PrescriptionDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge bg-danger">
+                                        @item.PendingCount
+                                    </span>
+                                </td>
+                                <td>
+                                    <a asp-action="Dispense"
+                                       asp-route-prescriptionId="@item.PrescriptionId"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-pills"></i> Dispense
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No pending prescriptions found
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
         </div>
     </div>
 </div>
 
-<!-- Include Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Add Medicine Modal -->
+<div class="modal fade" id="medicineModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddMedicine" method="post">
+                @Html.AntiForgeryToken()
 
+                <div class="modal-header">
+                    <h5>Add Medicine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-@section Modals {
+                <div class="modal-body">
 
-    <div class="modal fade" id="medicineTypeModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="AddMedicineType" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h5>Add Medicine Type</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input name="TypeName" class="form-control" required />
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-success">Save</button>
-                    </div>
-                </form>
-            </div>
+                    <!-- Medicine Name -->
+                    <input id="medicineName"
+                           name="MedicineName"
+                           class="form-control mb-1"
+                           placeholder="Medicine Name"
+                           required />
+                    <small id="medicineNameError" class="text-danger"></small>
+
+                    <!-- Medicine Type -->
+                    <select name="MedicineTypeId"
+                            class="form-control mb-2"
+                            asp-items="ViewBag.MedicineTypes"
+                            required>
+                        <option value="">-- Select Type --</option>
+                    </select>
+
+                    <!-- Price -->
+                    <input id="price"
+                           name="Price"
+                           type="number"
+                           step="0.01"
+                           class="form-control mb-1"
+                           placeholder="Price"
+                           required />
+                    <small id="priceError" class="text-danger"></small>
+
+                    <!-- Stock -->
+                    <input id="stock"
+                           name="QuantityStock"
+                           type="number"
+                           class="form-control mb-1"
+                           placeholder="Stock Quantity"
+                           required />
+                    <small id="stockError" class="text-danger"></small>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+
+            </form>
         </div>
     </div>
+</div>
 
-    <div class="modal fade" id="medicineModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="AddMedicine" method="post">
-                    @Html.AntiForgeryToken()
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-                    <div class="modal-header">
-                        <h5>Add Medicine</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+@section Scripts {
+    <script>
 
-                    <div class="modal-body">
+        // 🔍 SEARCH FUNCTION
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+            var value = this.value.toLowerCase();
+            var rows = document.querySelectorAll("#prescriptionTable tbody tr");
 
-                        <input name="MedicineName" class="form-control mb-2" required />
+            rows.forEach(function (row) {
+                row.style.display = row.textContent.toLowerCase().includes(value) ? "" : "none";
+            });
+        });
 
-                        <select name="MedicineTypeId" class="form-control mb-2"
-                                asp-items="ViewBag.MedicineTypes"></select>
 
-                        <input name="Price" type="number" step="0.01" class="form-control mb-2" required />
-                        <input name="QuantityStock" type="number" class="form-control mb-2" required />
+        // =========================
+        // ✅ VALIDATION SECTION
+        // =========================
 
-                    </div>
+        var namePattern = /^[A-Za-z]+$/;
 
-                    <div class="modal-footer">
-                        <button class="btn btn-success">Save</button>
-                    </div>
+        function validateName() {
+            var value = $("#medicineName").val().trim();
+            if (!value) {
+                $("#medicineNameError").text("Medicine name is required.");
+                return false;
+            }
+            if (!namePattern.test(value)) {
+                $("#medicineNameError").text("Only letters allowed and must start with letter.");
+                return false;
+            }
+            $("#medicineNameError").text("");
+            return true;
+        }
 
-                </form>
-            </div>
-        </div>
-    </div>
+        function validatePrice() {
+            var price = parseFloat($("#price").val());
+            if (isNaN(price) || price <= 0) {
+                $("#priceError").text("Enter valid price greater than 0.");
+                return false;
+            }
+            $("#priceError").text("");
+            return true;
+        }
 
+        function validateStock() {
+            var stock = parseInt($("#stock").val());
+            if (isNaN(stock) || stock < 0) {
+                $("#stockError").text("Stock cannot be negative.");
+                return false;
+            }
+            $("#stockError").text("");
+            return true;
+        }
+
+        $("#medicineName").on("blur", validateName);
+        $("#price").on("blur", validatePrice);
+        $("#stock").on("blur", validateStock);
+
+        $("form").on("submit", function () {
+            return validateName() & validatePrice() & validateStock();
+        });
+
+        $('#medicineModal').on('hidden.bs.modal', function () {
+            $("#medicineName").val("");
+            $("#price").val("");
+            $("#stock").val("");
+            $(".text-danger").text("");
+        });
+
+    </script>
 }
-
