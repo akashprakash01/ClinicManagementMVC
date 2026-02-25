@@ -382,11 +382,11 @@
 
         // ---------------- REAL-TIME VALIDATION ----------------
         $("#addName, #addDOB, #addGender, #addContact").on("input change", function () {
-            validatePatientForm("add");
+            validateSingleField($(this), "add");
         });
 
         $("#editName, #editDOB, #editGender, #editContact").on("input change", function () {
-            validatePatientForm("edit");
+            validateSingleField($(this), "edit");
         });
 
     });
@@ -500,7 +500,11 @@
 
         form.find(".validation-message").text("");
 
-        if (name.length < 3) {
+        if (!name) {
+            form.find("[data-valmsg-for='Name']").text("Name is required");
+            isValid = false;
+        }
+        else if (name.length < 3) {
             form.find("[data-valmsg-for='Name']").text("Name must be at least 3 characters");
             isValid = false;
         }
@@ -514,8 +518,16 @@
             let today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            if (birthDate >= today) {
+            let minDate = new Date();
+            minDate.setFullYear(today.getFullYear() -120);
+            minDate.setHours(0, 0, 0, 0);
+
+            if (birthDate > today) {
                 form.find("[data-valmsg-for='DOB']").text("DOB must be in the past");
+                isValid = false;
+            }
+            else if (birthDate < minDate){
+                form.find("[data-valmsg-for='DOB']").text("Future date not allowed");
                 isValid = false;
             }
         }
@@ -527,12 +539,83 @@
 
         let contactRegex = /^[6-9][0-9]{9}$/;
 
-        if (!contactRegex.test(contact)) {
-            form.find("[data-valmsg-for='Contact']").text("Enter valid 10 digit mobile number");
+        if (!contact) {
+            form.find("[data-valmsg-for='Contact']").text("Contact is required");
+            isValid = false;
+        }
+        else if (!contactRegex.test(contact)) {
+            form.find("[data-valmsg-for='Contact']")
+                .text("Enter valid 10 digit mobile number and start with 6,7,8,9.");
             isValid = false;
         }
 
         return isValid;
+    }
+
+    function validateSingleField(field, prefix) {
+
+        let form = $(`#${prefix}PatientForm`);
+        let fieldName = field.attr("name");
+
+        let name = $(`#${prefix}Name`).val().trim();
+        let dob = $(`#${prefix}DOB`).val();
+        let gender = $(`#${prefix}Gender`).val();
+        let contact = $(`#${prefix}Contact`).val();
+
+        form.find(`[data-valmsg-for='${fieldName}']`).text("");
+
+        if (fieldName === "Name") {
+
+            if (!name) {
+                form.find("[data-valmsg-for='Name']").text("Name is required");
+            }
+            else if (name.length < 3) {
+                form.find("[data-valmsg-for='Name']").text("Name must be at least 3 characters");
+            }
+
+        }
+
+        if (fieldName === "DOB") {
+
+            if (!dob) {
+                form.find("[data-valmsg-for='DOB']").text("DOB is required");
+                return;
+            }
+
+            let birthDate = new Date(dob);
+            let today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let minDate = new Date();
+            minDate.setFullYear(today.getFullYear() - 120);
+            minDate.setHours(0,0,0,0);
+
+            if (birthDate > today) {
+                form.find("[data-valmsg-for='DOB']").text("DOB must be in the past");
+            }
+            else if (birthDate < minDate) {
+                form.find("[data-valmsg-for='DOB']").text("Age cannot be more than 120 years");
+            }
+        }
+
+        if (fieldName === "Gender") {
+            if (!gender) {
+                form.find("[data-valmsg-for='Gender']").text("Please select gender");
+            }
+        }
+
+        if (fieldName === "Contact") {
+
+            let regex = /^[6-9][0-9]{9}$/;
+
+            if (!contact) {
+                form.find("[data-valmsg-for='Contact']").text("Contact is required");
+            }
+            else if (!regex.test(contact)) {
+                form.find("[data-valmsg-for='Contact']")
+               .text("Enter valid 10 digit mobile number and start with 6,7,8,9.");
+            }
+        }
     }
 
 
@@ -557,6 +640,24 @@
         });
 
     }
+
+        // RESET ADD PATIENT MODAL
+        $('#addPatientModal').on('hidden.bs.modal', function () {
+
+            $('#addPatientForm')[0].reset();
+
+            $('#addPatientForm .validation-message').text("");
+
+        });
+
+        // RESET EDIT PATIENT MODAL
+        $('#editPatientModal').on('hidden.bs.modal', function () {
+
+            $('#editPatientForm')[0].reset();
+
+            $('#editPatientForm .validation-message').text("");
+
+        });
 
 </script>
 }

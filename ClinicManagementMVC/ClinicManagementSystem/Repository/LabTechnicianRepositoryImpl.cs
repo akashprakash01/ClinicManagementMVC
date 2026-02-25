@@ -90,6 +90,7 @@ namespace ClinicManagementSystem.Repository
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.AddWithValue("@PrescriptionLabTestId", model.PrescriptionLabTestId);
+                    cmd.Parameters.AddWithValue("@TotalAmount", model.TotalAmount);
                     cmd.Parameters.AddWithValue("@Result", model.Result ?? "");
 
                     con.Open();
@@ -146,7 +147,7 @@ namespace ClinicManagementSystem.Repository
                         list.Add(new LabTestResultDisplayVM
                         {
                             LabTestResultId = Convert.ToInt32(reader["LabTestResultId"]),
-                            PrescriptionId = Convert.ToInt32(reader["prescriptionId"]), // 🔥 CRITICAL FIX
+                            PrescriptionId = Convert.ToInt32(reader["prescriptionId"]), 
                             PatientName = reader["PatientName"].ToString(),
                             LabTestName = reader["labTestName"].ToString(),
                             TotalAmount = Convert.ToDecimal(reader["TotalAmount"]),
